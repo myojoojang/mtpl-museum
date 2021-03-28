@@ -1,0 +1,63 @@
+<template>
+  <div>
+    <v-row>
+      <v-col cols="12" sm="6" v-for="dep of deps" :key="dep.displayId">
+        <div
+          @click="openDlg(dep)"
+          style="height: 100px"
+          class="d-flex justify-center align-center serif white pointer"
+        >
+          <div class="box serif bold larger">{{ dep.displayName }}</div>
+        </div>
+      </v-col>
+    </v-row>
+    <v-dialog
+      fullscreen
+      hide-overlay
+      transition="dialog-bottom-transition"
+      v-model="isDlgOpen"
+    >
+      <department
+        v-if="isDlgOpen"
+        :dep-data="depData"
+        @dep-dlg-close="isDlgOpen = false"
+      />
+    </v-dialog>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+import Department from "./Department.vue";
+export default {
+  components: { Department },
+  name: "Explorer",
+  data: () => ({
+    deps: [],
+    isDlgOpen: false,
+    depData: {},
+  }),
+  created() {
+    this.getData();
+  },
+  methods: {
+    getData() {
+      axios
+        .get("/departments")
+        .then((res) => {
+          // console.log(res);
+          this.deps = res.data.departments;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    openDlg(dep) {
+      console.log(dep);
+      this.depData = dep;
+      this.isDlgOpen = true;
+    },
+  },
+};
+</script>
