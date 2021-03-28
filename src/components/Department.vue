@@ -22,8 +22,15 @@
         <!-- <display-box :prop-data="el" :key="el.index" v-if="i % 2 === 1" /> -->
       </template>
     </v-card-text>
-    <v-progress-circular indeterminate color="white" v-if="!isObjReady">
-    </v-progress-circular>
+
+    <v-overlay
+      class="text-center"
+      z-index="9999"
+      opacity="0.6"
+      :value="!isObjReady"
+    >
+      <v-progress-circular color="white" size="40" indeterminate />
+    </v-overlay>
   </v-card>
 </template>
 
