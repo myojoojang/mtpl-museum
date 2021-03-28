@@ -75,11 +75,7 @@
       transition="dialog-bottom-transition"
       v-model="isDlgOpen"
     >
-      <full-img
-        :prop-data="info"
-        v-if="isDlgOpen"
-        @img-dlg-close="isDlgOpen = false"
-      />
+      <full-img :prop-data="info" @img-dlg-close="isDlgOpen = false" />
     </v-dialog>
   </v-row>
 </template>

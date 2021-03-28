@@ -5,7 +5,7 @@
         <div
           @click="openDlg(dep)"
           style="height: 100px"
-          class="d-flex justify-center align-center serif white pointer"
+          class="d-flex justify-center align-center serif white hover pointer"
         >
           <div class="box serif bold larger">{{ dep.displayName }}</div>
         </div>
@@ -17,11 +17,7 @@
       transition="dialog-bottom-transition"
       v-model="isDlgOpen"
     >
-      <department
-        v-if="isDlgOpen"
-        :dep-data="depData"
-        @dep-dlg-close="isDlgOpen = false"
-      />
+      <department :dep-data="depData" @dep-dlg-close="isDlgOpen = false" />
     </v-dialog>
   </div>
 </template>

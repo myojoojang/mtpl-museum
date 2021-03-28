@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card class="hidden">
     <div class="text-center">
       <v-icon class="my-4" @click="$emit('img-dlg-close')"
         >mdi-close-circle</v-icon
@@ -11,6 +11,7 @@
       </v-col>
       <v-col cols="12" md="6" class="pa-0">
         <div class="ma-4">
+          <h2 class="serif my-2">{{ propData.title }}</h2>
           <template v-for="(val, key) in data">
             <div class="smaller" v-if="val" :key="key">
               <span class="upppercase bold">{{ key }}</span>
@@ -50,3 +51,8 @@ export default {
   },
 };
 </script>
+<style scoped>
+.hidden {
+  overflow-x: hidden;
+}
+</style>

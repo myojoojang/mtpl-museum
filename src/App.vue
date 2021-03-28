@@ -64,6 +64,10 @@ a {
   text-transform: capitalize;
 }
 
+.hover {
+  transition: all 0.4s ease;
+}
+
 .hover:hover {
   color: #ffe018;
   transition: all 0.4s ease;
@@ -96,6 +100,9 @@ div .v-btn {
   letter-spacing: 0.25em;
 }
 
+.box {
+  transition: all 0.4s ease;
+}
 .box:hover {
   font-size: 1.65rem;
   transition: all 0.4s ease;
