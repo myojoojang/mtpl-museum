@@ -43,7 +43,9 @@ export default {
   methods: {
     getData() {
       axios
-        .get("/departments")
+        .get(
+          "https://collectionapi.metmuseum.org/public/collection/v1/departments"
+        )
         .then((res) => {
           // console.log(res);
           this.deps = res.data.departments;
