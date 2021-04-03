@@ -2,7 +2,6 @@
   <v-row>
     <template v-if="isEven">
       <v-col cols="12" md="6" class="pa-1">
-        <!-- {{ propData }} -->
         <template v-if="isImgReady">
           <v-img
             v-if="imgArr.length < 2"
@@ -23,8 +22,8 @@
       <v-col cols="12" md="6" class="pa-0 d-flex align-center">
         <div class="white--text capitalize slim ma-4">
           <div class="larger bold serif my-4">{{ propData.title }}</div>
-          <span class="bold">{{ propData.culture || propData.country }}</span
-          >, {{ propData.objectDate }}
+          <span class="bold">{{ propData.culture || propData.country }}</span>
+          {{ propData.objectDate }}
           <div>{{ propData.medium }}</div>
           <div>{{ propData.dimensions }}</div>
           <div>Accession Year {{ propData.accessionYear }}</div>
@@ -41,8 +40,8 @@
       >
         <div class="white--text capitalize slim ma-4">
           <div class="larger bold serif my-4">{{ propData.title }}</div>
-          <span class="bold">{{ propData.culture || propData.country }}</span
-          >, {{ propData.objectDate }}
+          <span class="bold">{{ propData.culture || propData.country }}</span>
+          {{ propData.objectDate }}
           <div>{{ propData.medium }}</div>
           <div>{{ propData.dimensions }}</div>
           <div>Accession Year {{ propData.accessionYear }}</div>

@@ -13,11 +13,14 @@
     </v-row>
     <v-dialog
       fullscreen
-      hide-overlay
       transition="dialog-bottom-transition"
       v-model="isDlgOpen"
     >
-      <department :dep-data="depData" @dep-dlg-close="isDlgOpen = false" />
+      <department
+        v-if="isDlgOpen"
+        :dep-data="depData"
+        @dep-dlg-close="isDlgOpen = false"
+      />
     </v-dialog>
   </div>
 </template>
