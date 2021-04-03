@@ -52,6 +52,7 @@
 <script>
 import axios from "axios";
 import DisplayBox from "./DisplayBox.vue";
+import { APIURL } from "@/GlobalVars";
 
 export default {
   name: "Department",
@@ -78,7 +79,7 @@ export default {
     getData() {
       axios
         .get(
-          `https://collectionapi.metmuseum.org/public/collection/v1/search?departmentId=${this.depId}&isOnView=true&hasImages=true&q=${this.depData.displayName}`
+          `${APIURL}/search?departmentId=${this.depId}&isOnView=true&hasImages=true&q=${this.depData.displayName}`
         )
         .then((res) => {
           this.ids = res.data.objectIDs;
@@ -114,7 +115,7 @@ export default {
     },
     getObjectData(item) {
       axios
-        .get(`/objects/${item}`)
+        .get(`${APIURL}/objects/${item}`)
         .then((res) => {
           // console.log(res);
           const obj = res.data;

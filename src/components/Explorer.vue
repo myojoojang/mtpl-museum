@@ -27,6 +27,7 @@
 
 <script>
 import axios from "axios";
+import { APIURL } from "@/GlobalVars";
 
 import Department from "./Department.vue";
 export default {
@@ -43,9 +44,7 @@ export default {
   methods: {
     getData() {
       axios
-        .get(
-          "https://collectionapi.metmuseum.org/public/collection/v1/departments"
-        )
+        .get(`${APIURL}/departments`)
         .then((res) => {
           // console.log(res);
           this.deps = res.data.departments;
