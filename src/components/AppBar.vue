@@ -17,13 +17,13 @@
     <router-link
       class="hover mx-2 d-none d-flex d-sm-flex d-md-none"
       to="/explorer"
-      ><v-icon>mdi-circle</v-icon></router-link
+      ><v-icon color="black">mdi-compass</v-icon></router-link
     >
     <router-link
       class="hover mx-2 d-none d-flex d-sm-flex d-md-none"
       to="/search"
     >
-      <v-icon>mdi-magnify</v-icon></router-link
+      <v-icon color="black">mdi-magnify</v-icon></router-link
     >
   </v-app-bar>
 </template>

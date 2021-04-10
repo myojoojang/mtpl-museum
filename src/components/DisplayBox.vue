@@ -5,12 +5,11 @@
         <template v-if="isImgReady">
           <v-img
             v-if="imgArr.length < 2"
-            height="40vw"
             :src="propData.primaryImageSmall"
             class="img-hover"
           />
 
-          <v-carousel v-else hide-delimiters height="40vw" class="img-hover">
+          <v-carousel v-else hide-delimiters class="img-hover">
             <v-carousel-item
               v-for="(item, i) in imgArr"
               :key="i"
@@ -54,12 +53,11 @@
         <template v-if="isImgReady">
           <v-img
             v-if="imgArr.length < 2"
-            height="50vw"
             class="img-hover"
             :src="propData.primaryImageSmall"
           />
 
-          <v-carousel v-else hide-delimiters height="40vw" class="img-hover">
+          <v-carousel v-else hide-delimiters class="img-hover">
             <v-carousel-item
               v-for="(item, i) in imgArr"
               :key="i"

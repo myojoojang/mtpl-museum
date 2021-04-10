@@ -1,6 +1,9 @@
 <template>
   <v-card color="black">
-    <div class="d-flex justify-space-between align-center pa-4">
+    <div
+      v-if="!isSearchReq"
+      class="d-flex justify-space-between align-center pa-4"
+    >
       <div class="larger serif white--text uppercase">
         {{ depData.displayName }}
       </div>
@@ -9,7 +12,10 @@
       <v-icon @click="$emit('dep-dlg-close')" color="white">mdi-close</v-icon>
     </div>
     <v-card-text class="pa-4">
-      <div class="d-flex justify-end align-center mb-6">
+      <p v-if="isSearchReq" class="white--text mx-8 mb-8">
+        found {{ totalLength }} collections.
+      </p>
+      <div v-if="!isSearchReq" class="d-flex justify-end align-center mb-6">
         <div style="width: 100px">
           <v-select
             rounded
@@ -58,31 +64,38 @@ export default {
   name: "Department",
   props: {
     depData: { type: Object, default: null },
+    isSearchReq: { type: Boolean, default: false },
+    searchKeyword: { type: String, default: "" },
   },
   components: {
     DisplayBox,
   },
   data: () => ({
-    depId: null,
     nums: 10,
     objArray: [],
     isObjReady: false,
     showND: false,
-    numList: [5, 10, 20, 30, 50, 100],
+    numList: [5, 10, 20, 30, 50],
+    totalLength: null,
   }),
   beforeMount() {
     // console.log(this.depData);
-    this.depId = this.depData.departmentId;
+    if (!this.isSearchReq) {
+      const depId = this.depData.departmentId;
+      this.query = `${APIURL}/search?departmentId=${depId}&isHighlight=true&hasImages=true&q=${this.depData.displayName}`;
+    } else {
+      this.query = `${APIURL}/search?hasImages=true&isHighlight=true&q=${this.searchKeyword}`;
+    }
     this.getData();
   },
   methods: {
     getData() {
       axios
-        .get(
-          `${APIURL}/search?departmentId=${this.depId}&isOnView=true&hasImages=true&q=${this.depData.displayName}`
-        )
+        .get(this.query)
         .then((res) => {
           this.ids = res.data.objectIDs;
+          this.totalLength = res.data.total;
+
           if (!res.data.total) {
             this.isObjReady = true;
             this.showND = true;
@@ -90,8 +103,11 @@ export default {
             if (this.ids.length < this.nums) {
               this.nums = this.ids.length;
             }
-
-            this.selectIds();
+            if (!this.isSearchReq) {
+              this.selectIds();
+            } else {
+              this.selectIdsForPagenation();
+            }
           }
         })
         .catch((err) => {
@@ -110,6 +126,20 @@ export default {
       }
 
       for (let item of items) {
+        this.getObjectData(item);
+      }
+    },
+
+    selectIdsForPagenation() {
+      this.isObjReady = false;
+      this.objArray = [];
+      // const items = [];
+      const ids = this.ids;
+      // for (let i = 0; i < this.ids; i++) {
+      //   items[i] = ids[Math.floor(Math.random() * ids.length)];
+      // }
+
+      for (let item of ids) {
         this.getObjectData(item);
       }
     },

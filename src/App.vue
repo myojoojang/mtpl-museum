@@ -24,7 +24,9 @@ export default {
 * {
   font-family: "Roboto", sans-serif;
 }
-
+* {
+  scroll-behavior: smooth;
+}
 html {
   overflow: scroll;
   overflow-x: hidden;
