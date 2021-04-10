@@ -1,24 +1,10 @@
 # museum-app
 
-## Project setup
-```
-npm install
-```
+## THE METROPOLITAN MUSEUM EXPLORER
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+### search and explor MET collection w/ The Metropolitan Museum of Art Collection API
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- VUE
+- VUETIFY
+- AXIOS
+- [THE METROPOLITAN MUSEUM OF ART COLLECTION API](https://metmuseum.github.io/)
