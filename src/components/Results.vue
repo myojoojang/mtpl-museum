@@ -1,5 +1,11 @@
 <template>
   <v-card color="black">
+    <section id="scroll-to"><div /></section>
+    <a href="#scroll-to"
+      ><v-btn fab small dark fixed bottom right color="secondary">
+        <v-icon>mdi-arrow-up</v-icon>
+      </v-btn>
+    </a>
     <div
       v-if="!isSearchReq"
       class="d-flex justify-space-between align-center pa-4"
@@ -13,7 +19,7 @@
     </div>
     <v-card-text class="pa-4">
       <p v-if="isSearchReq" class="white--text mx-8 mb-8">
-        found {{ totalLength }} collections.
+        {{ totalLength }} results for '{{ searchKeyword }}'.
       </p>
       <div v-if="!isSearchReq" class="d-flex justify-end align-center mb-6">
         <div style="width: 100px">
@@ -61,7 +67,7 @@ import DisplayBox from "./DisplayBox.vue";
 import { APIURL } from "@/GlobalVars";
 
 export default {
-  name: "Department",
+  name: "Results",
   props: {
     depData: { type: Object, default: null },
     isSearchReq: { type: Boolean, default: false },
@@ -71,6 +77,7 @@ export default {
     DisplayBox,
   },
   data: () => ({
+    fab: false,
     nums: 10,
     objArray: [],
     isObjReady: false,
@@ -82,7 +89,7 @@ export default {
     // console.log(this.depData);
     if (!this.isSearchReq) {
       const depId = this.depData.departmentId;
-      this.query = `${APIURL}/search?departmentId=${depId}&isHighlight=true&hasImages=true&q=${this.depData.displayName}`;
+      this.query = `${APIURL}/search?departmentId=${depId}&hasImages=true&q=${this.depData.displayName}`;
     } else {
       this.query = `${APIURL}/search?hasImages=true&isHighlight=true&q=${this.searchKeyword}`;
     }
@@ -157,6 +164,15 @@ export default {
         .catch((err) => {
           console.log(err);
         });
+    },
+
+    onScroll(e) {
+      if (typeof window === "undefined") return;
+      const top = window.pageYOffset || e.target.scrollTop || 0;
+      this.fab = top > 20;
+    },
+    toTop() {
+      this.$vuetify.goTo(0);
     },
   },
 };

@@ -19,20 +19,21 @@
         >
       </div>
     </v-card>
-    <department
+    <results
       v-if="passKeyword"
       :is-search-req="passKeyword"
       :search-keyword="searchKeyword"
     />
+    <v-card height="60vh" v-else class="text-center mt-4">
+      Search a keyword that you want to see.
+    </v-card>
   </div>
 </template>
 
 <script>
-// import Department from "./Department.vue";
-
-import Department from "./Department.vue";
+import Results from "./Results.vue";
 export default {
-  components: { Department },
+  components: { Results },
   name: "Search",
   data: () => ({
     searchKeyword: "",

@@ -16,7 +16,7 @@
       transition="dialog-bottom-transition"
       v-model="isDlgOpen"
     >
-      <department
+      <results
         v-if="isDlgOpen"
         :dep-data="depData"
         @dep-dlg-close="isDlgOpen = false"
@@ -29,9 +29,9 @@
 import axios from "axios";
 import { APIURL } from "@/GlobalVars";
 
-import Department from "./Department.vue";
+import Results from "./Results.vue";
 export default {
-  components: { Department },
+  components: { Results },
   name: "Explorer",
   data: () => ({
     deps: [],
