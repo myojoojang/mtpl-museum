@@ -9,8 +9,12 @@
       <v-col cols="12" md="6" class="black--text bottom">
         <div>
           <div>
-            <v-btn color="secondary" class="ma-3">COLLECTION EXPLORER </v-btn>
-            <v-btn color="secondary">SEARCH</v-btn>
+            <router-link to="/explorer">
+              <v-btn color="secondary" class="ma-3">COLLECTION EXPLORER </v-btn>
+            </router-link>
+            <router-link to="/search">
+              <v-btn color="secondary">SEARCH</v-btn>
+            </router-link>
           </div>
           <div class="bold larger serif mx-3 mb-8">
             The Metropolitan Museum of Art Collection API
