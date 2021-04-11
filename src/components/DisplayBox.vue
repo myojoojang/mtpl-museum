@@ -9,7 +9,13 @@
             class="img-hover"
           />
 
-          <v-carousel v-else hide-delimiters class="img-hover">
+          <v-carousel
+            v-else
+            hide-delimiters
+            height="100%"
+            style="min-height: 400px"
+            class="img-hover"
+          >
             <v-carousel-item
               v-for="(item, i) in imgArr"
               :key="i"
@@ -57,7 +63,13 @@
             :src="propData.primaryImageSmall"
           />
 
-          <v-carousel v-else hide-delimiters class="img-hover">
+          <v-carousel
+            v-else
+            hide-delimiters
+            height="100%"
+            style="min-height: 400px"
+            class="img-hover"
+          >
             <v-carousel-item
               v-for="(item, i) in imgArr"
               :key="i"
