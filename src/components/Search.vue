@@ -2,7 +2,7 @@
   <div>
     <v-card color="black" class="pa-8">
       <h2 class="white--text serif mx-4">Search</h2>
-      <div style="width: 95vw" class="d-flex align-center">
+      <div style="width: 85vw" class="d-flex align-center">
         <v-text-field
           v-model="searchKeyword"
           background-color="white"
