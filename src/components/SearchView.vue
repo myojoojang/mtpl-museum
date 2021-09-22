@@ -31,10 +31,10 @@
 </template>
 
 <script>
-import Results from "./Results.vue";
+import Results from "./partial/Results.vue";
 export default {
   components: { Results },
-  name: "Search",
+  name: "SearchView",
   data: () => ({
     searchKeyword: "",
     passKeyword: false,

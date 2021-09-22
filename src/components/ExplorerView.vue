@@ -29,10 +29,10 @@
 import axios from "axios";
 import { APIURL } from "@/GlobalVars";
 
-import Results from "./Results.vue";
+import Results from "./partial/Results.vue";
 export default {
   components: { Results },
-  name: "Explorer",
+  name: "ExplorerView",
   data: () => ({
     deps: [],
     isDlgOpen: false,

@@ -9,7 +9,6 @@
 
 <script>
 import AppBar from "./AppBar.vue";
-
 import Footer from "./Footer.vue";
 
 export default {

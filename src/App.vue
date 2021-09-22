@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import MainView from "./components/MainView.vue";
+import MainView from "./components/main/MainView.vue";
 
 export default {
   name: "App",
