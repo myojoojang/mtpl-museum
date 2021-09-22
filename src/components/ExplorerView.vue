@@ -16,7 +16,7 @@
       transition="dialog-bottom-transition"
       v-model="isDlgOpen"
     >
-      <results
+      <Displays
         v-if="isDlgOpen"
         :dep-data="depData"
         @dep-dlg-close="isDlgOpen = false"
@@ -29,9 +29,9 @@
 import axios from "axios";
 import { APIURL } from "@/GlobalVars";
 
-import Results from "./partial/Results.vue";
+import Displays from "./partial/Displays.vue";
 export default {
-  components: { Results },
+  components: { Displays },
   name: "ExplorerView",
   data: () => ({
     deps: [],

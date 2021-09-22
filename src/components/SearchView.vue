@@ -19,7 +19,7 @@
         >
       </div>
     </v-card>
-    <results
+    <Displays
       v-if="passKeyword"
       :is-search-req="passKeyword"
       :search-keyword="searchKeyword"
@@ -31,9 +31,9 @@
 </template>
 
 <script>
-import Results from "./partial/Results.vue";
+import Displays from "./partial/Displays.vue";
 export default {
-  components: { Results },
+  components: { Displays },
   name: "SearchView",
   data: () => ({
     searchKeyword: "",

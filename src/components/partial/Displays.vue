@@ -67,7 +67,7 @@ import DisplayBox from "./DisplayBox.vue";
 import { APIURL } from "@/GlobalVars";
 
 export default {
-  name: "Results",
+  name: "Displays",
   props: {
     depData: { type: Object, default: null },
     isSearchReq: { type: Boolean, default: false },

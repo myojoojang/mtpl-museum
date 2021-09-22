@@ -26,7 +26,7 @@
 
 <script>
 export default {
-  name: "FullImg",
+  name: "MoreInfoDlg",
   props: {
     propData: { type: Object, default: null },
   },

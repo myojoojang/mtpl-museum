@@ -84,15 +84,15 @@
       transition="dialog-bottom-transition"
       v-model="isDlgOpen"
     >
-      <full-img :prop-data="info" @img-dlg-close="isDlgOpen = false" />
+      <MoreInfoDlg :prop-data="info" @img-dlg-close="isDlgOpen = false" />
     </v-dialog>
   </v-row>
 </template>
 
 <script>
-import FullImg from "./FullImg.vue";
+import MoreInfoDlg from "./MoreInfoDlg.vue";
 export default {
-  components: { FullImg },
+  components: { MoreInfoDlg },
   name: "DisplayBox",
   props: {
     propData: { type: Object, default: null },
