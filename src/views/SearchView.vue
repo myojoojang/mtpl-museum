@@ -22,20 +22,22 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
+import type { CollectionQuery } from "@/types/museum";
 import ArtworkCollection from "@/components/collection/ArtworkCollection.vue";
 
-export default {
+export default defineComponent({
   name: "SearchView",
   components: { ArtworkCollection },
   data: () => ({ searchKeyword: "", submittedKeyword: "" }),
   computed: {
-    collectionQuery() { return { keyword: this.submittedKeyword }; },
+    collectionQuery(): CollectionQuery { return { keyword: this.submittedKeyword }; },
   },
   methods: {
     search() {
       this.submittedKeyword = this.searchKeyword.trim();
     },
   },
-};
+});
 </script>

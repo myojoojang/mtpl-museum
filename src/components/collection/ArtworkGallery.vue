@@ -1,5 +1,6 @@
 <template>
-  <v-card ref="gallery" color="black" :aria-busy="loading">
+  <v-card color="black" :aria-busy="loading">
+    <div ref="galleryTop" />
     <v-btn fab small fixed bottom right color="secondary" aria-label="Back to top" @click="toTop">
       <v-icon>mdi-arrow-up</v-icon>
     </v-btn>
@@ -26,22 +27,28 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
+import type { PropType } from "vue";
+import type { Artwork } from "@/types/museum";
 import ArtworkCard from "./ArtworkCard.vue";
 
-export default {
+export default defineComponent({
   name: "ArtworkGallery",
   components: { ArtworkCard },
   props: {
-    artworks: { type: Array, required: true },
+    artworks: { type: Array as PropType<Artwork[]>, required: true },
     loading: { type: Boolean, default: false },
     error: { type: String, default: "" },
     failed: { type: Number, default: 0 },
   },
   methods: {
     toTop() {
-      this.$refs.gallery.$el.scrollIntoView({ behavior: "smooth", block: "start" });
+      const gallery = this.$refs.galleryTop;
+      if (gallery instanceof HTMLElement) {
+        gallery.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     },
   },
-};
+});
 </script>

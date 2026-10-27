@@ -24,16 +24,20 @@
   </v-card>
 </template>
 
-<script>
-import { flattenArtwork } from "@/utils/artwork.mjs";
+<script lang="ts">
+import { defineComponent } from "vue";
+import type { PropType } from "vue";
+import type { Artwork } from "@/types/museum";
+import type { ArtworkDetails } from "@/utils/artwork";
+import { flattenArtwork } from "@/utils/artwork";
 
-export default {
+export default defineComponent({
   name: "ArtworkDetailsDialog",
-  props: { artwork: { type: Object, required: true } },
+  props: { artwork: { type: Object as PropType<Artwork>, required: true } },
   computed: {
-    details() { return flattenArtwork(this.artwork); },
+    details(): ArtworkDetails { return flattenArtwork(this.artwork); },
   },
-};
+});
 </script>
 
 <style scoped>

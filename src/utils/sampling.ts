@@ -1,4 +1,4 @@
-export function sampleIds(ids, count, random = Math.random) {
+export function sampleIds(ids: readonly number[], count: number, random: () => number = Math.random): number[] {
   const pool = [...new Set(ids)];
   const size = Math.min(count, pool.length);
   for (let index = 0; index < size; index += 1) {

@@ -1,6 +1,6 @@
 # Metropolitan Museum Explorer
 
-Browse departments and search highlights from The Metropolitan Museum of Art's collection. Built with Vue 2, Vue Router, Vuetify 2, and Axios.
+Browse departments and search highlights from The Metropolitan Museum of Art's collection. Built with TypeScript, Vue 2.7, Vue Router, Vuetify 2, and Axios.
 
 ## Development
 
@@ -11,11 +11,16 @@ npm run serve
 
 ```sh
 npm run lint
+npm run typecheck
 npm test
 npm run build
 ```
 
-The dependency-free regression tests use Node.js 18 or newer. This project retains its existing Vue CLI 4 toolchain; on modern Node versions, the build script enables the OpenSSL legacy provider required by Webpack 4.
+Use Node.js 18 or newer. Tests run through Node's test runner with `tsx` to load TypeScript. `npm run typecheck` checks application code, Vue scripts and templates, and test code under strict TypeScript settings. `npm run build` runs that check before compiling the production bundle.
+
+This project retains Vue CLI 4 and Vuetify 2. Vue and its template compiler are aligned on 2.7.16 for typed component props. The build and development scripts enable the OpenSSL legacy provider required by Webpack 4 on modern Node versions. ESLint runs independently of Vue CLI with TypeScript and Vue parsers.
+
+All application modules and tests use `.ts`; every Vue component uses `<script lang="ts">` with `defineComponent` for inference. Shared domain contracts live in `src/types/museum.ts`. Global UI component declarations describe the registered UI components; Vuetify's framework entry point reuses its published types. TypeScript `strict` mode applies throughout the app and tests. Template expressions and known component prop types are checked, while `strictTemplates` remains disabled for Vue 2 compatibility with reserved attributes such as `key`. Babel configuration lives in `babel.config.json`, and Vue CLI settings live in the `vue` section of `package.json`.
 
 ## Structure
 
@@ -28,6 +33,7 @@ src/
   models/                 Collection state and asynchronous workflows
   services/               HTTP client and museum API operations
   utils/                  Pure sampling and metadata functions
+  types/                  Domain contracts and global component declarations
   router/                 Route definitions
   styles/                 Global styles
   plugins/                Vue plugin configuration
@@ -43,4 +49,4 @@ Search submits a trimmed keyword and shows ten highlights per page. Department b
 
 API requests use Axios query parameters so keywords and department names are encoded correctly. Data comes directly from the public [Met Collection API](https://metmuseum.github.io/); no API key is required. Fonts and icons also require an internet connection.
 
-The existing framework versions are preserved. A framework or dependency upgrade should be handled separately from this behavior-focused refactor.
+The app retains the Vue 2/Vuetify 2 architecture. A Vue 3 or build-tool migration remains a separate change.

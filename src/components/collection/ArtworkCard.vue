@@ -25,24 +25,27 @@
   </v-row>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
+import type { PropType } from "vue";
+import type { Artwork } from "@/types/museum";
 import ArtworkDetailsDialog from "./ArtworkDetailsDialog.vue";
 
-export default {
+export default defineComponent({
   name: "ArtworkCard",
   components: { ArtworkDetailsDialog },
   props: {
-    artwork: { type: Object, required: true },
+    artwork: { type: Object as PropType<Artwork>, required: true },
     isEven: { type: Boolean, default: false },
   },
   data: () => ({ isDialogOpen: false }),
   computed: {
-    images() {
+    images(): string[] {
       return [...new Set([
         this.artwork.primaryImageSmall || this.artwork.primaryImage,
         ...(this.artwork.additionalImages || []),
-      ].filter(Boolean))];
+      ].filter((image): image is string => Boolean(image)))];
     },
   },
-};
+});
 </script>

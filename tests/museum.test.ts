@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createMuseumApi } from '../src/services/museum-api.mjs';
-import { sampleIds } from '../src/utils/sampling.mjs';
-import { flattenArtwork } from '../src/utils/artwork.mjs';
+import { createMuseumApi } from '../src/services/museum-api';
+import { sampleIds } from '../src/utils/sampling';
+import { flattenArtwork } from '../src/utils/artwork';
+import type { AxiosRequestConfig } from 'axios';
+import { httpClient } from './helpers';
 
-const tick = () => new Promise(resolve => setImmediate(resolve));
+const tick = () => new Promise<void>(resolve => setImmediate(resolve));
 
 test('department samples contain distinct IDs and handle small or empty collections', () => {
   const ids = [1, 1, 2, 3];
@@ -15,31 +17,31 @@ test('department samples contain distinct IDs and handle small or empty collecti
 });
 
 test('search passes special characters as query parameters and normalizes no results', async () => {
-  const calls = [];
-  const api = createMuseumApi({ get: async (...args) => {
+  const calls: Array<[string, AxiosRequestConfig?]> = [];
+  const api = createMuseumApi(httpClient(async (...args) => {
     calls.push(args);
-    return { data: { total: 0, objectIDs: null } };
-  } });
+    return { total: 0, objectIDs: null };
+  }));
   assert.deepEqual(await api.search({ keyword: 'art & design?' }), { ids: [], total: 0 });
   assert.deepEqual(calls[0], ['/search', { params: {
     hasImages: true, q: 'art & design?', isHighlight: true,
   } }]);
   await api.search({ keyword: 'Arts & Crafts', departmentId: 4 });
-  assert.deepEqual(calls[1][1].params, { hasImages: true, q: 'Arts & Crafts', departmentId: 4 });
+  assert.deepEqual(calls[1][1]?.params, { hasImages: true, q: 'Arts & Crafts', departmentId: 4 });
 });
 
 test('artwork loading caps concurrency, preserves order, and reports partial failures', async () => {
   let active = 0;
   let maximum = 0;
-  const api = createMuseumApi({ get: async path => {
+  const api = createMuseumApi(httpClient(async path => {
     const id = Number(path.split('/').pop());
     active += 1;
     maximum = Math.max(active, maximum);
     await tick();
     active -= 1;
     if (id === 3) throw new Error('Unavailable');
-    return { data: { objectID: id } };
-  } });
+    return { objectID: id };
+  }));
   const result = await api.getArtworks(Array.from({ length: 15 }, (_, index) => index));
   assert.equal(maximum, 5);
   assert.equal(result.failed, 1);
@@ -48,17 +50,17 @@ test('artwork loading caps concurrency, preserves order, and reports partial fai
 });
 
 test('empty collections make no object requests', async () => {
-  const api = createMuseumApi({ get: () => { throw new Error('Unexpected request'); } });
+  const api = createMuseumApi(httpClient(async () => { throw new Error('Unexpected request'); }));
   assert.deepEqual(await api.getArtworks([]), { artworks: [], failed: 0 });
 });
 
 test('cancellation stops workers instead of reporting ordinary failures', async () => {
   const cancellation = new Error('Cancelled');
   let calls = 0;
-  const api = createMuseumApi({ get: async () => {
+  const api = createMuseumApi(httpClient(async () => {
     calls += 1;
     throw cancellation;
-  } }, error => error === cancellation);
+  }), error => error === cancellation);
   await assert.rejects(api.getArtworks(Array.from({ length: 20 }, (_, i) => i)), cancellation);
   assert.equal(calls, 5);
 });

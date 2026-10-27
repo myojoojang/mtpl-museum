@@ -1,29 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCollection } from '../src/models/collection.mjs';
+import { createCollection } from '../src/models/collection';
+import type { ArtworksResult, MuseumApi, SearchResult } from '../src/types/museum';
+import { createTrackedRequest, deferred } from './helpers';
 
-function collection(overrides = {}) {
+function collection(overrides: Partial<Pick<MuseumApi, 'search' | 'getArtworks'>> = {}) {
   return createCollection({
     api: {
       search: async () => ({ ids: [1, 2, 3], total: 3 }),
       getArtworks: async ids => ({ artworks: ids.map(objectID => ({ objectID })), failed: 0 }),
       ...overrides,
     },
-    createRequest: () => ({ token: {}, cancelled: false, cancel() { this.cancelled = true; } }),
-    isCancelled: error => error.cancelled,
+    createRequest: createTrackedRequest,
+    isCancelled: error => typeof error === 'object' && error !== null && 'cancelled' in error,
   });
 }
 
 test('a newer search wins even if the previous response arrives later', async () => {
-  let resolveOld;
+  const oldSearchResult = deferred<SearchResult>();
   const model = collection({
     search: ({ keyword }) => keyword === 'art'
-      ? new Promise(resolve => { resolveOld = resolve; })
+      ? oldSearchResult.promise
       : Promise.resolve({ ids: [2], total: 1 }),
   });
   const oldSearch = model.load({ keyword: 'art' });
   await model.load({ keyword: 'new' });
-  resolveOld({ ids: [1], total: 1 });
+  oldSearchResult.resolve({ ids: [1], total: 1 });
   await oldSearch;
   assert.equal(model.state.artworks[0].objectID, 2);
   assert.equal(model.state.loading, false);
@@ -46,7 +48,7 @@ test('search failure clears loading and retry searches again', async () => {
 });
 
 test('search loads only the selected page and resets the page for a new query', async () => {
-  let selected;
+  let selected: readonly number[] = [];
   const model = collection({
     search: async () => ({ ids: Array.from({ length: 1000 }, (_, i) => i), total: 1000 }),
     getArtworks: async ids => {
@@ -91,22 +93,19 @@ test('department sample sizes are bounded by unique IDs', async () => {
 });
 
 test('disposing cancels the active request and ignores late responses', async () => {
-  let resolveSearch;
-  let current;
+  const searchResult = deferred<SearchResult>();
+  const current = createTrackedRequest();
   const model = createCollection({
     api: {
-      search: () => new Promise(resolve => { resolveSearch = resolve; }),
+      search: () => searchResult.promise,
       getArtworks: () => { throw new Error('Must not request after disposal'); },
     },
-    createRequest: () => {
-      current = { token: {}, cancelled: false, cancel() { this.cancelled = true; } };
-      return current;
-    },
+    createRequest: () => current,
     isCancelled: () => false,
   });
   const pending = model.load({ keyword: 'art' });
   model.dispose();
-  resolveSearch({ ids: [1], total: 1 });
+  searchResult.resolve({ ids: [1], total: 1 });
   await pending;
   assert.equal(current.cancelled, true);
   assert.equal(model.state.loading, false);
@@ -116,17 +115,17 @@ test('disposing cancels the active request and ignores late responses', async ()
 });
 
 test('a late artwork response cannot overwrite the next collection', async () => {
-  let resolveArtworks;
+  const artworkResult = deferred<ArtworksResult>();
   const model = collection({
     search: async ({ keyword }) => ({ ids: [keyword === 'old' ? 1 : 2], total: 1 }),
     getArtworks: async ids => ids[0] === 1
-      ? new Promise(resolve => { resolveArtworks = resolve; })
+      ? artworkResult.promise
       : { artworks: [{ objectID: 2 }], failed: 0 },
   });
   const pending = model.load({ keyword: 'old' });
   await new Promise(resolve => setImmediate(resolve));
   await model.load({ keyword: 'new' });
-  resolveArtworks({ artworks: [{ objectID: 1 }], failed: 0 });
+  artworkResult.resolve({ artworks: [{ objectID: 1 }], failed: 0 });
   await pending;
   assert.deepEqual(model.state.artworks, [{ objectID: 2 }]);
 });

@@ -4,11 +4,12 @@
   </v-app>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import AppLayout from "./components/layout/AppLayout.vue";
 
-export default {
+export default defineComponent({
   name: "App",
   components: { AppLayout },
-};
+});
 </script>

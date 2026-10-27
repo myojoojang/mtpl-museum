@@ -7,15 +7,16 @@
   </v-main>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import AppHeader from "./AppHeader.vue";
 import AppFooter from "./AppFooter.vue";
 
-export default {
+export default defineComponent({
   name: "AppLayout",
   components: {
     AppHeader,
     AppFooter,
   },
-};
+});
 </script>

@@ -13,19 +13,30 @@
       </v-col>
     </v-row>
     <v-dialog v-model="isDialogOpen" fullscreen transition="dialog-bottom-transition">
-      <ArtworkCollection v-if="isDialogOpen" :query="collectionQuery" @close="isDialogOpen = false" />
+      <ArtworkCollection v-if="isDialogOpen && collectionQuery" :query="collectionQuery" @close="isDialogOpen = false" />
     </v-dialog>
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
+import type { CollectionQuery, Department, RequestHandle } from "@/types/museum";
+
+interface ExplorerState {
+  departments: Department[];
+  loading: boolean;
+  error: string;
+  isDialogOpen: boolean;
+  selectedDepartment: Department | null;
+  request: RequestHandle | null;
+}
 import { museumApi, createRequest, isCancelled } from "@/services/museum";
 import ArtworkCollection from "@/components/collection/ArtworkCollection.vue";
 
-export default {
+export default defineComponent({
   name: "ExplorerView",
   components: { ArtworkCollection },
-  data: () => ({
+  data: (): ExplorerState => ({
     departments: [],
     loading: false,
     error: "",
@@ -34,7 +45,7 @@ export default {
     request: null,
   }),
   computed: {
-    collectionQuery() {
+    collectionQuery(): CollectionQuery | null {
       if (!this.selectedDepartment) return null;
       return {
         keyword: this.selectedDepartment.displayName,
@@ -61,12 +72,12 @@ export default {
         this.loading = false;
       }
     },
-    openDepartment(department) {
+    openDepartment(department: Department) {
       this.selectedDepartment = department;
       this.isDialogOpen = true;
     },
   },
-};
+});
 </script>
 
 <style scoped>

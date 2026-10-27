@@ -31,33 +31,36 @@
   </ArtworkGallery>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
+import type { PropType } from "vue";
+import type { CollectionQuery } from "@/types/museum";
 import ArtworkGallery from "./ArtworkGallery.vue";
-import { createCollection } from "@/models/collection.mjs";
+import { createCollection } from "@/models/collection";
 import { museumApi, createRequest, isCancelled } from "@/services/museum";
 
-export default {
+export default defineComponent({
   name: "ArtworkCollection",
   components: { ArtworkGallery },
   props: {
-    query: { type: Object, required: true },
+    query: { type: Object as PropType<CollectionQuery>, required: true },
   },
   data() {
     const collection = createCollection({ api: museumApi, createRequest, isCancelled });
     return { collection, state: collection.state, pageSizes: [5, 10, 20, 30, 50] };
   },
   computed: {
-    isSearch() { return this.query.departmentId == null; },
-    pageCount() { return Math.ceil(this.state.ids.length / this.state.pageSize); },
+    isSearch(): boolean { return this.query.departmentId == null; },
+    pageCount(): number { return Math.ceil(this.state.ids.length / this.state.pageSize); },
   },
   watch: {
     query: {
       immediate: true,
-      handler(query) { this.collection.load(query); },
+      handler(query: CollectionQuery) { this.collection.load(query); },
     },
   },
   beforeDestroy() { this.collection.dispose(); },
-};
+});
 </script>
 
 <style scoped>
