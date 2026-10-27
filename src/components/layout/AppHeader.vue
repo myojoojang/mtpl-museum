@@ -30,6 +30,6 @@
 
 <script>
 export default {
-  name: "AppBar",
+  name: "AppHeader",
 };
 </script>

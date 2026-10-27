@@ -19,12 +19,25 @@ The dependency-free regression tests use Node.js 18 or newer. This project retai
 
 ## Structure
 
-- `src/services/`: API client, request timeout, bounded artwork loading, and unique random sampling.
-- `src/components/`: home, department explorer, and keyword search views.
-- `src/components/partial/`: shared gallery, artwork card, and details dialog.
-- `src/components/main/`: navigation and application shell.
-- `src/utils/`: artwork metadata formatting.
-- `tests/`: API and metadata regression tests.
+```text
+src/
+  views/                  Route-level pages and page-specific interactions
+  components/
+    layout/               Application shell, header, and footer
+    collection/           Collection controls, gallery, cards, and details
+  models/                 Collection state and asynchronous workflows
+  services/               HTTP client and museum API operations
+  utils/                  Pure sampling and metadata functions
+  router/                 Route definitions
+  styles/                 Global styles
+  plugins/                Vue plugin configuration
+```
+
+Pages describe the collection to load through a single `query` object (`keyword`, plus `departmentId` for department browsing). `ArtworkCollection` connects that query to a model and owns the model's lifetime. `ArtworkGallery`, `ArtworkCard`, and `ArtworkDetailsDialog` receive data through props and report actions through events; they do not fetch collection data.
+
+`createCollection` owns pagination, sampling, retry decisions, cancellation, and protection against stale responses. Its dependencies are injected, its state is local to each mounted collection, and it has no Vue or browser dependency. The component makes that state reactive through Vue's `data` option and calls `dispose()` when destroyed. Request handles stay private to the model.
+
+The service layer owns HTTP details and bounded object fetching. Pure utilities stay independent of services and components. Tests import the API, model, and utilities directly, without extracting component source or evaluating it in a VM.
 
 Search submits a trimmed keyword and shows ten highlights per page. Department browsing samples distinct artwork IDs with an adjustable count. Artwork requests run at most five at a time, preserve result order, and report partial failures. Changing searches or closing a department cancels pending requests; stale responses cannot replace the active collection.
 

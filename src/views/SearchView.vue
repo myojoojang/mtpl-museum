@@ -15,7 +15,7 @@
         </v-btn>
       </form>
     </v-card>
-    <Displays v-if="submittedKeyword" is-search-req :search-keyword="submittedKeyword" />
+    <ArtworkCollection v-if="submittedKeyword" :query="collectionQuery" />
     <v-card v-else height="60vh" class="text-center mt-4">
       Search a keyword that you want to see.
     </v-card>
@@ -23,12 +23,15 @@
 </template>
 
 <script>
-import Displays from "./partial/Displays.vue";
+import ArtworkCollection from "@/components/collection/ArtworkCollection.vue";
 
 export default {
   name: "SearchView",
-  components: { Displays },
+  components: { ArtworkCollection },
   data: () => ({ searchKeyword: "", submittedKeyword: "" }),
+  computed: {
+    collectionQuery() { return { keyword: this.submittedKeyword }; },
+  },
   methods: {
     search() {
       this.submittedKeyword = this.searchKeyword.trim();

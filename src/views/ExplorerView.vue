@@ -13,18 +13,18 @@
       </v-col>
     </v-row>
     <v-dialog v-model="isDialogOpen" fullscreen transition="dialog-bottom-transition">
-      <Displays v-if="isDialogOpen" :dep-data="selectedDepartment" @dep-dlg-close="isDialogOpen = false" />
+      <ArtworkCollection v-if="isDialogOpen" :query="collectionQuery" @close="isDialogOpen = false" />
     </v-dialog>
   </div>
 </template>
 
 <script>
 import { museumApi, createRequest, isCancelled } from "@/services/museum";
-import Displays from "./partial/Displays.vue";
+import ArtworkCollection from "@/components/collection/ArtworkCollection.vue";
 
 export default {
   name: "ExplorerView",
-  components: { Displays },
+  components: { ArtworkCollection },
   data: () => ({
     departments: [],
     loading: false,
@@ -33,6 +33,15 @@ export default {
     selectedDepartment: null,
     request: null,
   }),
+  computed: {
+    collectionQuery() {
+      if (!this.selectedDepartment) return null;
+      return {
+        keyword: this.selectedDepartment.displayName,
+        departmentId: this.selectedDepartment.departmentId,
+      };
+    },
+  },
   created() {
     this.loadDepartments();
   },

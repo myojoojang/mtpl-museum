@@ -9,15 +9,15 @@ export default new Router({
   routes: [
     {
       path: '/',
-      component: () => import('@/components/HomeView.vue'),
+      component: () => import('@/views/HomeView.vue'),
     },
     {
       path: '/explorer',
-      component: () => import('@/components/ExplorerView.vue'),
+      component: () => import('@/views/ExplorerView.vue'),
     },
     {
       path: '/search',
-      component: () => import('@/components/SearchView.vue'),
+      component: () => import('@/views/SearchView.vue'),
     },
     { path: '*', redirect: '/' },
   ],
