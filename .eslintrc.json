@@ -1,0 +1,156 @@
+{
+  "root": true,
+  "env": {
+    "node": true
+  },
+  "extends": [
+    "plugin:vue/strongly-recommended",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parserOptions": {
+    "parser": "@typescript-eslint/parser"
+  },
+  "rules": {
+    "arrow-body-style": [
+      "error",
+      "always"
+    ],
+    "curly": [
+      "error",
+      "all"
+    ],
+    "brace-style": [
+      "error",
+      "1tbs",
+      {
+        "allowSingleLine": false
+      }
+    ],
+    "max-statements-per-line": [
+      "error",
+      {
+        "max": 1
+      }
+    ],
+    "@typescript-eslint/indent": [
+      "error",
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "no-trailing-spaces": "error",
+    "arrow-parens": [
+      "error",
+      "always"
+    ],
+    "quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "comma-dangle": [
+      "error",
+      "always-multiline"
+    ],
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
+    "object-curly-newline": [
+      "error",
+      {
+        "ObjectExpression": {
+          "minProperties": 2,
+          "multiline": true,
+          "consistent": true
+        }
+      }
+    ],
+    "object-property-newline": "error",
+    "no-nested-ternary": "error",
+    "no-plusplus": "error",
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ForStatement",
+        "message": "Use array operations instead of indexed loops."
+      },
+      {
+        "selector": "AssignmentExpression[operator='+=']",
+        "message": "Derive values instead of maintaining manual counters."
+      },
+      {
+        "selector": "AssignmentExpression[operator='-=']",
+        "message": "Derive values instead of maintaining manual counters."
+      },
+      {
+        "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='forEach']",
+        "message": "Use for...of instead of forEach."
+      }
+    ],
+    "padding-line-between-statements": [
+      "error",
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": "return"
+      },
+      {
+        "blankLine": "always",
+        "prev": [
+          "const",
+          "let"
+        ],
+        "next": "*"
+      },
+      {
+        "blankLine": "any",
+        "prev": [
+          "const",
+          "let"
+        ],
+        "next": [
+          "const",
+          "let"
+        ]
+      },
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": "try"
+      }
+    ],
+    "max-len": [
+      "error",
+      {
+        "code": 100,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true,
+        "ignoreComments": true
+      }
+    ],
+    "@typescript-eslint/consistent-type-imports": "error",
+    "vue/max-attributes-per-line": [
+      "error",
+      {
+        "singleline": 1,
+        "multiline": 1
+      }
+    ],
+    "no-tabs": "error",
+    "eol-last": [
+      "error",
+      "always"
+    ]
+  },
+  "parser": "vue-eslint-parser"
+}

@@ -1,0 +1,56 @@
+<template>
+  <v-app-bar
+    color="white"
+    flat
+    class="uppercase"
+  >
+    <div>
+      <router-link to="/">
+        <div class="serif bold hover">
+          The Metropolitan Museum of Art
+        </div>
+      </router-link>
+    </div>
+    <v-spacer />
+
+    <router-link
+      class="hover mx-2 d-none d-md-flex"
+      to="/explorer"
+    >
+      Collection Explorer
+    </router-link>
+    <router-link
+      class="hover mx-2 d-none d-md-flex"
+      to="/search"
+    >
+      Search
+    </router-link>
+
+    <router-link
+      class="hover mx-2 d-flex d-md-none"
+      to="/explorer"
+      aria-label="Collection explorer"
+    >
+      <v-icon color="black">
+        mdi-compass
+      </v-icon>
+    </router-link>
+    <router-link
+      class="hover mx-2 d-flex d-md-none"
+      to="/search"
+      aria-label="Search"
+    >
+      <v-icon color="black">
+        mdi-magnify
+      </v-icon>
+    </router-link>
+  </v-app-bar>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'SiteHeader',
+});
+</script>

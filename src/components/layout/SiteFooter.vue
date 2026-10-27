@@ -1,5 +1,8 @@
 <template>
-  <v-card height="40px" class="mt-2">
+  <v-card
+    height="40px"
+    class="mt-2"
+  >
     <v-divider class="my-2" />
     <div class="serif text-right small">
       © 2000–2021 The Metropolitan Museum of Art. All rights reserved.
@@ -7,10 +10,12 @@
   </v-card>
 </template>
 
-<script>
-export default {
-  name: "Footer",
-};
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'SiteFooter',
+});
 </script>
 
 <style>
