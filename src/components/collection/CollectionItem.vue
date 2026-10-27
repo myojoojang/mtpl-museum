@@ -15,7 +15,7 @@
       <v-carousel
         v-else-if="images.length > 1"
         hide-delimiters
-        height="400"
+        height="600"
         class="img-hover"
       >
         <v-carousel-item
