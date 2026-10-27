@@ -22,12 +22,12 @@ test('search passes special characters as query parameters and normalizes no res
     calls.push(args);
     return { total: 0, objectIDs: null };
   }));
-  assert.deepEqual(await api.search({ keyword: 'art & design?' }), { ids: [], total: 0 });
-  assert.deepEqual(calls[0], ['/search', { params: {
-    hasImages: true, q: 'art & design?', isHighlight: true,
+  assert.deepEqual(await api.search({ keyword: 'art & design?', offset: 10, limit: 10 }), { ids: [], total: 0 });
+  assert.deepEqual(calls[0], ['/v1.1/search', { params: {
+    hasImages: true, q: 'art & design?', isHighlight: true, offset: 10, limit: 10,
   } }]);
-  await api.search({ keyword: 'Arts & Crafts', departmentId: 4 });
-  assert.deepEqual(calls[1][1]?.params, { hasImages: true, q: 'Arts & Crafts', departmentId: 4 });
+  await api.search({ keyword: 'Arts & Crafts', departmentId: 4, offset: 0, limit: 50 });
+  assert.deepEqual(calls[1][1]?.params, { hasImages: true, departmentId: 4, offset: 0, limit: 50 });
 });
 
 test('artwork loading caps concurrency, preserves order, and reports partial failures', async () => {
@@ -73,4 +73,17 @@ test('metadata preserves nested fields, false and zero without rendering objects
     title: 'Artwork', isPublicDomain: false, count: 0,
     'tags.0.term': 'Art', 'tags.1.term': 'Painting', 'measurements.width': 12,
   });
+});
+
+test('departments and object details retain their supported v1 routes', async () => {
+  const paths: string[] = [];
+  const api = createMuseumApi(httpClient(async path => {
+    paths.push(path);
+    return path.endsWith('/departments')
+      ? { departments: [{ departmentId: 4, displayName: 'Arms and Armor' }] }
+      : { objectID: 1 };
+  }));
+  await api.getDepartments();
+  await api.getArtworks([1]);
+  assert.deepEqual(paths, ['/v1/departments', '/v1/objects/1']);
 });

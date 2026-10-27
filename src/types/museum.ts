@@ -28,6 +28,11 @@ export interface CollectionQuery {
   departmentId?: number;
 }
 
+export interface SearchQuery extends CollectionQuery {
+  offset: number;
+  limit: number;
+}
+
 export type RequestOptions = Pick<AxiosRequestConfig, 'cancelToken'>;
 export type RequestHandle = Pick<CancelTokenSource, 'token' | 'cancel'>;
 export type CancellationCheck = (error: unknown) => boolean;
@@ -44,7 +49,7 @@ export interface ArtworksResult {
 
 export interface MuseumApi {
   getDepartments(options?: RequestOptions): Promise<Department[]>;
-  search(query: CollectionQuery & RequestOptions): Promise<SearchResult>;
+  search(query: SearchQuery & RequestOptions): Promise<SearchResult>;
   getArtworks(ids: readonly number[], options?: RequestOptions): Promise<ArtworksResult>;
 }
 

@@ -1,6 +1,7 @@
+import { MAX_SEARCH_RESULTS, MAX_SEARCH_PAGE_SIZE } from '../config/collection';
 import { sampleIds } from '../utils/sampling';
 import type {
-  Artwork, CancellationCheck, CollectionQuery, MuseumApi, RequestHandle, RequestOptions,
+  Artwork, CancellationCheck, CollectionQuery, MuseumApi, RequestHandle, RequestOptions, SearchResult,
 } from '../types/museum';
 
 export interface CollectionState {
@@ -72,11 +73,7 @@ export function createCollection({ api, createRequest, isCancelled }: Collection
   }
 
   async function fetchArtworks(options: RequestOptions, isCurrent: () => boolean): Promise<void> {
-    if (!query) return;
-    const start = (state.page - 1) * state.pageSize;
-    const selected = query.departmentId == null
-      ? state.ids.slice(start, start + state.pageSize)
-      : sampleIds(state.ids, state.pageSize);
+    const selected = state.ids;
     const result = await api.getArtworks(selected, options);
     if (!isCurrent()) return;
     state.artworks = result.artworks;
@@ -86,31 +83,51 @@ export function createCollection({ api, createRequest, isCancelled }: Collection
     }
   }
 
+  async function fetchPage(options: RequestOptions, isCurrent: () => boolean): Promise<void> {
+    if (!query) return;
+    const activeQuery = { ...query };
+    const isDepartment = activeQuery.departmentId != null;
+    searchFailed = true;
+    state.ids = [];
+
+    // Discover a department's size before choosing a random bounded window.
+    // Keyword searches request only the page the visitor selected.
+    let departmentResult: SearchResult | undefined;
+    if (isDepartment && !state.total) {
+      departmentResult = await api.search({ ...activeQuery, offset: 0, limit: 1, ...options });
+      if (!isCurrent()) return;
+      state.total = departmentResult.total;
+    }
+
+    const reachable = Math.min(state.total, MAX_SEARCH_RESULTS);
+    const limit = isDepartment
+      ? Math.min(MAX_SEARCH_PAGE_SIZE, Math.max(state.pageSize, 100), reachable)
+      : Math.min(state.pageSize, MAX_SEARCH_RESULTS - (state.page - 1) * state.pageSize);
+    const offset = isDepartment
+      ? Math.floor(Math.random() * (Math.max(0, reachable - limit) + 1))
+      : (state.page - 1) * state.pageSize;
+    const result = isDepartment && reachable <= 1 && departmentResult
+      ? departmentResult
+      : await api.search({ ...activeQuery, offset, limit, ...options });
+    if (!isCurrent()) return;
+    state.ids = isDepartment ? sampleIds(result.ids, state.pageSize) : result.ids;
+    state.total = result.total;
+    searchFailed = false;
+    await fetchArtworks(options, isCurrent);
+  }
+
+  function refresh(): Promise<void> {
+    if (!query) return Promise.resolve();
+    return run(fetchPage, 'Unable to load the collection. Please try again.');
+  }
+
   function load(nextQuery: CollectionQuery): Promise<void> {
     if (disposed) return Promise.resolve();
     query = { ...nextQuery };
     state.ids = [];
     state.total = 0;
     state.page = 1;
-    searchFailed = false;
-    return run(async (options, isCurrent) => {
-      let result;
-      try {
-        result = await api.search({ ...nextQuery, ...options });
-      } catch (error) {
-        if (isCurrent() && !isCancelled(error)) searchFailed = true;
-        throw error;
-      }
-      if (!isCurrent()) return;
-      state.ids = result.ids;
-      state.total = result.total;
-      await fetchArtworks(options, isCurrent);
-    }, 'Unable to load the collection. Please try again.');
-  }
-
-  function refresh(): Promise<void> {
-    if (!query) return Promise.resolve();
-    return run(fetchArtworks, 'Unable to load artworks. Please try again.');
+    return refresh();
   }
 
   return {
@@ -118,15 +135,22 @@ export function createCollection({ api, createRequest, isCancelled }: Collection
     load,
     refresh,
     setPage(page: number) {
+      const pageCount = Math.max(1, Math.ceil(Math.min(state.total, MAX_SEARCH_RESULTS) / state.pageSize));
+      if (disposed || !Number.isInteger(page) || page < 1 || page > pageCount) return Promise.resolve();
       state.page = page;
       return refresh();
     },
     setPageSize(size: number) {
+      if (disposed || !Number.isInteger(size) || size < 1 || size > MAX_SEARCH_PAGE_SIZE) {
+        return Promise.resolve();
+      }
       state.pageSize = size;
       state.page = 1;
       return refresh();
     },
-    retry() { return searchFailed && query ? load(query) : refresh(); },
+    retry() {
+      return searchFailed ? refresh() : run(fetchArtworks, 'Unable to load artworks. Please try again.');
+    },
     dispose() {
       disposed = true;
       cancel();

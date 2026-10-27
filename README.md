@@ -46,7 +46,7 @@ Pages describe the collection to load through a single `query` object (`keyword`
 
 The service layer owns HTTP details and bounded object fetching. Pure utilities stay independent of services and components. Tests import the API, model, and utilities directly, without extracting component source or evaluating it in a VM.
 
-Search submits a trimmed keyword and shows ten highlights per page. Department browsing samples distinct artwork IDs with an adjustable count. Artwork requests run at most five at a time, preserve result order, and report partial failures. Changing searches or closing a department cancels pending requests; stale responses cannot replace the active collection.
+Search submits a trimmed keyword and requests ten highlights per page from `/public/collection/v1.1/search` using `offset` and `limit`. Pagination uses the full match count, capped at the API's 10,000-result window; a message asks visitors to refine searches with more matches. Department browsing uses a department-only filter and samples distinct artwork IDs from a random bounded result window with an adjustable count. It does not download every matching ID. Artwork requests run at most five at a time, preserve result order, and report partial failures. Changing searches or closing a department cancels pending requests; stale responses cannot replace the active collection.
 
 API requests use Axios query parameters so keywords and department names are encoded correctly. Data comes directly from the public [Met Collection API](https://metmuseum.github.io/); no API key is required. Fonts and icons also require an internet connection.
 
@@ -57,3 +57,5 @@ The app retains the Vue 2/Vuetify 2 architecture. A Vue 3 or build-tool migratio
 `netlify.toml` sets the build command to `npm run build` and publishes `dist`. Netlify reads `.nvmrc` to select Node.js 24, overriding an older Node version pinned in the site's UI. Use the same version locally with `nvm use`.
 
 If `vue-tsc` fails with `SyntaxError: Unexpected token '.'` at an optional-chaining expression, check the Node version near the start of the deploy log. The build must use the repository's `.nvmrc` version. Header, page, and redirect checks depend on a successful deploy and may all fail when the build stops.
+
+The museum retired `/public/collection/v1/search` on October 1, 2026. Only search uses `v1.1`; departments and individual artwork details continue to use `v1`. See the [Met API migration guide](https://metmuseum.github.io/#migrating-from-v1search).

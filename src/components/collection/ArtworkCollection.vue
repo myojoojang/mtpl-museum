@@ -13,12 +13,15 @@
       <p v-if="isSearch" class="white--text mx-8 mb-8" aria-live="polite">
         {{ state.total }} results for '{{ query.keyword }}'.
       </p>
-      <div v-else class="d-flex justify-end align-center mb-6">
+      <p v-if="isSearch && state.total > resultLimit" class="white--text mx-8 mb-8">
+        Showing the first {{ resultLimit.toLocaleString() }} matches. Refine your search to narrow the results.
+      </p>
+      <div v-if="!isSearch" class="d-flex justify-end align-center mb-6">
         <v-select :value="state.pageSize" :items="pageSizes" label="Artworks"
           class="artwork-count" rounded flat background-color="white"
           :disabled="state.loading" @change="collection.setPageSize($event)" />
         <v-btn x-small fab class="mx-2" aria-label="Refresh artworks"
-          :disabled="state.loading || !state.ids.length" @click="collection.refresh()">
+          :disabled="state.loading || !state.total" @click="collection.refresh()">
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
       </div>
@@ -36,6 +39,7 @@ import { defineComponent } from "vue";
 import type { PropType } from "vue";
 import type { CollectionQuery } from "@/types/museum";
 import ArtworkGallery from "./ArtworkGallery.vue";
+import { MAX_SEARCH_RESULTS } from "@/config/collection";
 import { createCollection } from "@/models/collection";
 import { museumApi, createRequest, isCancelled } from "@/services/museum";
 
@@ -47,11 +51,11 @@ export default defineComponent({
   },
   data() {
     const collection = createCollection({ api: museumApi, createRequest, isCancelled });
-    return { collection, state: collection.state, pageSizes: [5, 10, 20, 30, 50] };
+    return { collection, state: collection.state, pageSizes: [5, 10, 20, 30, 50], resultLimit: MAX_SEARCH_RESULTS };
   },
   computed: {
     isSearch(): boolean { return this.query.departmentId == null; },
-    pageCount(): number { return Math.ceil(this.state.ids.length / this.state.pageSize); },
+    pageCount(): number { return Math.ceil(Math.min(this.state.total, this.resultLimit) / this.state.pageSize); },
   },
   watch: {
     query: {

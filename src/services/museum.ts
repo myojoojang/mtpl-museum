@@ -3,7 +3,7 @@ import type { CancellationCheck, RequestHandle } from "../types/museum";
 import { createMuseumApi } from "./museum-api";
 
 const client = axios.create({
-  baseURL: "https://collectionapi.metmuseum.org/public/collection/v1",
+  baseURL: "https://collectionapi.metmuseum.org/public/collection",
   timeout: 20000,
 });
 
