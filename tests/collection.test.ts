@@ -70,7 +70,10 @@ test('departments and artwork details retain their supported v1 routes', async (
       };
     }
 
-    return { objectID: 1 };
+    return {
+      objectID: 1,
+      primaryImage: 'https://example.com/artwork.jpg',
+    };
   });
   const departments = await collectionApi.getDepartments();
   const artworks = await collectionApi.getArtworks([1]);
@@ -96,7 +99,10 @@ test('selected artworks start together without a request limit', async () => {
     started.push(objectID);
     await pending;
 
-    return { objectID };
+    return {
+      objectID,
+      primaryImage: 'https://example.com/artwork.jpg',
+    };
   });
   const ids = [1, 2, 3, 4, 5, 6];
   const loading = collectionApi.getArtworks(ids);
@@ -151,4 +157,42 @@ test('metadata retains nested fields, false, and zero', () => {
     'tags.1.term': 'Painting',
     'measurements.width': 12,
   });
+});
+
+test('artworks without image URLs are skipped', async () => {
+  const responses = [
+    { objectID: 1 },
+    {
+      objectID: 2,
+      primaryImage: '',
+      primaryImageSmall: '',
+      additionalImages: [''],
+    },
+    {
+      objectID: 3,
+      primaryImage: 'https://example.com/full.jpg',
+    },
+    {
+      objectID: 4,
+      primaryImageSmall: 'https://example.com/small.jpg',
+    },
+    {
+      objectID: 5,
+      additionalImages: ['https://example.com/additional.jpg'],
+    },
+  ];
+
+  mockHttp(async (config) => {
+    const objectID = Number(config.url?.split('/').pop());
+
+    return responses.find((artwork) => {
+      return artwork.objectID === objectID;
+    });
+  });
+  const artworks = await collectionApi.getArtworks([1, 2, 3, 4, 5]);
+
+  assert.deepEqual(artworks.map((artwork) => {
+    return artwork.objectID;
+  }), [3, 4, 5]);
+  assert.deepEqual(await collectionApi.getArtworks([1, 2]), []);
 });
