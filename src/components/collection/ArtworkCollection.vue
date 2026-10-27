@@ -1,77 +1,155 @@
 <template>
-  <ArtworkGallery :artworks="state.artworks" :loading="state.loading"
-    :error="state.error" :failed="state.failed" @retry="loadCollection()">
-    <template v-if="!isSearch" #header>
+  <ArtworkGallery
+    :artworks="artworks"
+    :loading="isLoading"
+    :error-message="errorMessage"
+    @retry="loadCollection"
+  >
+    <template
+      v-if="!isKeywordSearch"
+      #header
+    >
       <div class="d-flex justify-space-between align-center pa-4">
-        <div class="larger serif white--text uppercase">{{ query.keyword }}</div>
-        <v-btn icon dark aria-label="Close department" @click="$emit('close')">
+        <div class="larger serif white--text uppercase">
+          {{ query.keyword }}
+        </div>
+        <v-btn
+          icon
+          dark
+          aria-label="Close department"
+          @click="$emit('close')"
+        >
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
     </template>
     <template #controls>
-      <p v-if="isSearch" class="white--text mx-8 mb-8" aria-live="polite">
-        {{ state.total }} results for '{{ query.keyword }}'.
+      <p
+        v-if="isKeywordSearch && !isLoading && !errorMessage"
+        class="white--text mx-8 mb-8"
+      >
+        Showing {{ artworks.length }} of {{ totalResults }} results for '{{ query.keyword }}'.
       </p>
-      <p v-if="isSearch && state.total > resultLimit" class="white--text mx-8 mb-8">
-        Showing the first {{ resultLimit.toLocaleString() }} matches. Refine your search to narrow the results.
-      </p>
-      <div v-if="!isSearch" class="d-flex justify-end align-center mb-6">
-        <v-select :value="state.pageSize" :items="pageSizes" label="Artworks"
-          class="artwork-count" rounded flat background-color="white"
-          :disabled="state.loading" @change="loadCollection(1, $event)" />
-        <v-btn x-small fab class="mx-2" aria-label="Refresh artworks"
-          :disabled="state.loading || !state.total" @click="loadCollection()">
+      <div
+        v-if="!isKeywordSearch"
+        class="d-flex justify-end align-center mb-6"
+      >
+        <v-select
+          v-model="artworkCount"
+          :items="artworkCountOptions"
+          :disabled="isLoading || !!errorMessage"
+          label="Artworks"
+          class="artwork-count"
+          rounded
+          flat
+          background-color="white"
+          @change="loadArtworks"
+        />
+        <v-btn
+          x-small
+          fab
+          class="mx-2"
+          :disabled="isLoading || !!errorMessage"
+          aria-label="Refresh artworks"
+          @click="loadArtworks"
+        >
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
       </div>
-    </template>
-    <template #pagination>
-      <v-pagination v-if="isSearch && pageCount > 1" :value="state.page"
-        :length="pageCount" :total-visible="7" :disabled="state.loading"
-        @input="loadCollection($event)" />
     </template>
   </ArtworkGallery>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import type { PropType } from "vue";
-import type { CollectionQuery } from "@/types/museum";
-import ArtworkGallery from "./ArtworkGallery.vue";
-import { MAX_SEARCH_RESULTS } from "@/config/collection";
-import { createCollection } from "@/models/collection";
-import { museumApi } from "@/services/museum";
+import { defineComponent } from 'vue';
+import type { PropType } from 'vue';
+import type { Artwork, CollectionQuery } from '@/types/museum';
+import ArtworkGallery from './ArtworkGallery.vue';
+import { museumApi } from '@/services/museum';
+import { sampleIds } from '@/utils/sampling';
+
+interface CollectionState {
+  artworkIds: number[];
+  artworks: Artwork[];
+  totalResults: number;
+  artworkCount: number;
+  isLoading: boolean;
+  errorMessage: string;
+}
 
 export default defineComponent({
-  name: "ArtworkCollection",
+  name: 'ArtworkCollection',
   components: { ArtworkGallery },
   props: {
-    query: { type: Object as PropType<CollectionQuery>, required: true },
+    query: {
+      type: Object as PropType<CollectionQuery>,
+      required: true,
+    },
   },
-  data() {
-    const collection = createCollection(museumApi);
-    return { collection, state: collection.state, pageSizes: [5, 10, 20, 30, 50], resultLimit: MAX_SEARCH_RESULTS };
+  data(): CollectionState {
+    return {
+      artworkIds: [],
+      artworks: [],
+      totalResults: 0,
+      artworkCount: 10,
+      isLoading: false,
+      errorMessage: '',
+    };
   },
   computed: {
-    isSearch(): boolean { return this.query.departmentId == null; },
-    pageCount(): number { return Math.ceil(Math.min(this.state.total, this.resultLimit) / this.state.pageSize); },
-  },
-  watch: {
-    query: {
-      immediate: true,
-      handler(query: CollectionQuery) { this.collection.load(query); },
+    isKeywordSearch(): boolean {
+      return this.query.departmentId == null;
     },
+    artworkCountOptions(): number[] {
+      return [5, 10, 20, 30, 50];
+    },
+  },
+  created() {
+    this.loadCollection();
   },
   methods: {
-    loadCollection(page?: number, pageSize?: number): Promise<void> {
-      return this.collection.load(this.query, page ?? this.state.page, pageSize ?? this.state.pageSize);
+    async loadCollection(): Promise<void> {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      try {
+        const searchResult = await museumApi.search(this.query);
+
+        this.artworkIds = searchResult.ids;
+        this.totalResults = searchResult.total;
+        await this.loadArtworks();
+      } catch (error) {
+        this.errorMessage = 'We couldn’t load the collection. Please try again.';
+        console.error(error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async loadArtworks(): Promise<void> {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      try {
+        let selectedArtworkIds = this.artworkIds;
+
+        if (!this.isKeywordSearch) {
+          selectedArtworkIds = sampleIds(this.artworkIds, this.artworkCount);
+        }
+
+        this.artworks = await museumApi.getArtworks(selectedArtworkIds);
+      } catch (error) {
+        this.errorMessage = 'We couldn’t load the artworks. Please try again.';
+        console.error(error);
+      } finally {
+        this.isLoading = false;
+      }
     },
   },
-  beforeDestroy() { this.collection.dispose(); },
 });
 </script>
 
 <style scoped>
-.artwork-count { max-width: 120px; }
+.artwork-count {
+  max-width: 120px;
+}
 </style>

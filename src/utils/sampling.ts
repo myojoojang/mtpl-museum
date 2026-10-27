@@ -1,9 +1,11 @@
-export function sampleIds(ids: readonly number[], count: number, random: () => number = Math.random): number[] {
-  const pool = [...new Set(ids)];
-  const size = Math.min(count, pool.length);
-  for (let index = 0; index < size; index += 1) {
-    const selected = index + Math.floor(random() * (pool.length - index));
-    [pool[index], pool[selected]] = [pool[selected], pool[index]];
-  }
-  return pool.slice(0, size);
+export function sampleIds(
+  ids: readonly number[],
+  count: number,
+  random: () => number = Math.random,
+): number[] {
+  return Array.from({ length: Math.min(count, ids.length) }, () => {
+    const selectedIndex = Math.floor(random() * ids.length);
+
+    return ids[selectedIndex];
+  });
 }

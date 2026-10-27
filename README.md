@@ -12,6 +12,7 @@ npm run serve
 
 ```sh
 npm run lint
+npm run lint:fix
 npm run typecheck
 npm test
 npm run build
@@ -31,7 +32,6 @@ src/
   components/
     layout/               Application shell, header, and footer
     collection/           Collection controls, gallery, cards, and details
-  models/                 Collection state and asynchronous workflows
   services/               HTTP client and museum API operations
   utils/                  Pure sampling and metadata functions
   types/                  Domain contracts and global component declarations
@@ -40,13 +40,11 @@ src/
   plugins/                Vue plugin configuration
 ```
 
-Pages describe the collection to load through a single `query` object (`keyword`, plus `departmentId` for department browsing). `ArtworkCollection` connects that query to a model and owns the model's lifetime. `ArtworkGallery`, `ArtworkCard`, and `ArtworkDetailsDialog` receive data through props and report actions through events; they do not fetch collection data.
+`ArtworkCollection` follows the original component flow: search for matching IDs, select random IDs for a department, and load the artworks. The refresh button and count selector reuse the IDs already fetched. Artwork requests run together through `Promise.all`. Errors are logged to the console.
 
-`createCollection` follows one flow: `load(query, page, pageSize)` finds IDs, samples them for departments, and loads the artworks. It returns only `state`, `load`, and `dispose`. Pagination, refresh, and retry buttons call that same function. It keeps cancellation and stale-response checks so a previous request cannot replace the current results. Vue observes the returned state, and the component calls `dispose()` when destroyed.
+`src/services/museum.ts` contains three direct Axios operations: departments, search, and artwork details. There is no collection model, request scheduler, cancellation layer, timeout, retry flow, or partial-failure counter.
 
-`src/services/museum.ts` contains the Axios client and the three API calls the app uses: departments, search, and artwork details. Artwork requests run in batches of five. Pure utilities stay independent of services and components. Tests import the API, model, and utilities directly, without extracting component source or evaluating it in a VM.
-
-Search submits a trimmed keyword and requests ten highlights per page from `/public/collection/v1.1/search` using `offset` and `limit`. Pagination uses the full match count, capped at the API's 10,000-result window; a message asks visitors to refine searches with more matches. Department browsing uses a department-only filter and samples distinct artwork IDs from a random bounded result window with an adjustable count. It does not download every matching ID. Artwork requests run at most five at a time, preserve result order, and report partial failures. Changing searches or closing a department cancels pending requests; stale responses cannot replace the active collection.
+Search displays only the first page returned by `/public/collection/v1.1/search` (100 IDs by default). Department browsing samples from that first page using the original random selection behavior, so repeats are possible. The results label shows how many artworks are displayed out of the total match count. There are no pagination controls or background requests for further pages.
 
 API requests use Axios query parameters so keywords and department names are encoded correctly. Data comes directly from the public [Met Collection API](https://metmuseum.github.io/); no API key is required. Fonts and icons also require an internet connection.
 
@@ -59,3 +57,9 @@ The app retains the Vue 2/Vuetify 2 architecture. A Vue 3 or build-tool migratio
 If `vue-tsc` fails with `SyntaxError: Unexpected token '.'` at an optional-chaining expression, check the Node version near the start of the deploy log. The build must use the repository's `.nvmrc` version. Header, page, and redirect checks depend on a successful deploy and may all fail when the build stops.
 
 The museum retired `/public/collection/v1/search` on October 1, 2026. Only search uses `v1.1`; departments and individual artwork details continue to use `v1`. See the [Met API migration guide](https://metmuseum.github.io/#migrating-from-v1search).
+
+## Code style
+
+ESLint configuration lives in `.eslintrc.json`. Use `npm run lint` to check the app and tests, or `npm run lint:fix` to apply formatting fixes.
+
+Use multiline blocks with braces, explicit arrow-function returns, two-space indentation, single quotes in scripts, semicolons, and separate lines for object properties and Vue attributes. Use clear state names and separate dense expressions into named values. Indexed loops, increment/decrement operators, and manual `+=`/`-=` counters are rejected by lint. These rules preserve the simple loading flow described above.

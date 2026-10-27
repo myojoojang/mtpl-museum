@@ -1,18 +1,39 @@
 <template>
   <div>
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col
+        cols="12"
+        md="6"
+      >
         <a href="https://www.metmuseum.org">
-          <v-img src="../assets/home.jpg" height="85vh" class="img" alt="The Metropolitan Museum of Art"
-        /></a>
+          <v-img
+            src="../assets/home.jpg"
+            height="85vh"
+            class="img"
+            alt="The Metropolitan Museum of Art"
+          /></a>
       </v-col>
-      <v-col cols="12" md="6" class="bottom">
+      <v-col
+        cols="12"
+        md="6"
+        class="bottom"
+      >
         <div>
           <div>
-            <v-btn to="/explorer" color="secondary" class="ma-3 black--text">
+            <v-btn
+              to="/explorer"
+              color="secondary"
+              class="ma-3 black--text"
+            >
               COLLECTION EXPLORER
             </v-btn>
-            <v-btn to="/search" color="secondary" class="black--text">SEARCH</v-btn>
+            <v-btn
+              to="/search"
+              color="secondary"
+              class="black--text"
+            >
+              SEARCH
+            </v-btn>
           </div>
           <div class="bold larger serif mx-3 mb-8">
             The Metropolitan Museum of Art Collection API
@@ -23,7 +44,7 @@
             lives in three iconic sites in New York City—The Met Fifth Avenue,
             The Met Breuer, and The Met Cloisters. Millions of people also take
             part in The Met experience online.
-            <br />
+            <br>
             The Metropolitan Museum of Art provides select datasets of
             information on more than 470,000 artworks in its Collection .
           </div>
@@ -34,9 +55,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent } from 'vue';
 export default defineComponent({
-  name: "HomeView",
+  name: 'HomeView',
 });
 </script>
 

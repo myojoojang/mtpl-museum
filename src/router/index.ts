@@ -1,7 +1,7 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import Vue from 'vue';
+import Router from 'vue-router';
 
-Vue.use(Router)
+Vue.use(Router);
 
 export default new Router({
   mode: 'hash',
@@ -9,16 +9,21 @@ export default new Router({
   routes: [
     {
       path: '/',
-      component: () => import('@/views/HomeView.vue'),
+      component: () => {
+        return import('@/views/HomeView.vue');
+      },
     },
     {
       path: '/explorer',
-      component: () => import('@/views/ExplorerView.vue'),
+      component: () => {
+        return import('@/views/ExplorerView.vue');
+      },
     },
     {
       path: '/search',
-      component: () => import('@/views/SearchView.vue'),
+      component: () => {
+        return import('@/views/SearchView.vue');
+      },
     },
-    { path: '*', redirect: '/' },
   ],
-})
+});

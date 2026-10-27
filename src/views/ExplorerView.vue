@@ -1,54 +1,89 @@
 <template>
   <div>
-    <v-progress-linear v-if="loading" indeterminate aria-label="Loading departments" />
-    <v-alert v-if="error" type="error" role="alert">
-      {{ error }}
-      <v-btn text @click="loadDepartments">Retry</v-btn>
+    <v-progress-circular
+      v-if="isLoading"
+      indeterminate
+      color="white"
+      aria-label="Loading departments"
+    />
+    <v-alert
+      v-if="errorMessage"
+      type="error"
+      outlined
+      dark
+      role="alert"
+    >
+      <p>{{ errorMessage }}</p>
+      <v-btn
+        outlined
+        small
+        @click="loadDepartments"
+      >
+        Try again
+      </v-btn>
     </v-alert>
     <v-row>
-      <v-col v-for="department in departments" :key="department.departmentId" cols="12" sm="6">
-        <button type="button" class="department serif white hover" @click="openDepartment(department)">
+      <v-col
+        v-for="department in departments"
+        :key="department.departmentId"
+        cols="12"
+        sm="6"
+      >
+        <button
+          type="button"
+          class="department serif white hover"
+          @click="openDepartment(department)"
+        >
           <span class="box serif bold larger">{{ department.displayName }}</span>
         </button>
       </v-col>
     </v-row>
-    <v-dialog v-model="isDialogOpen" fullscreen transition="dialog-bottom-transition">
-      <ArtworkCollection v-if="isDialogOpen && collectionQuery" :query="collectionQuery" @close="isDialogOpen = false" />
+    <v-dialog
+      v-model="isDialogOpen"
+      fullscreen
+      transition="dialog-bottom-transition"
+    >
+      <ArtworkCollection
+        v-if="isDialogOpen && collectionQuery"
+        :query="collectionQuery"
+        @close="isDialogOpen = false"
+      />
     </v-dialog>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import axios from "axios";
-import type { CancelTokenSource } from "axios";
-import type { CollectionQuery, Department } from "@/types/museum";
+import { defineComponent } from 'vue';
+import type { CollectionQuery, Department } from '@/types/museum';
+import { museumApi } from '@/services/museum';
+import ArtworkCollection from '@/components/collection/ArtworkCollection.vue';
 
 interface ExplorerState {
   departments: Department[];
-  loading: boolean;
-  error: string;
+  isLoading: boolean;
+  errorMessage: string;
   isDialogOpen: boolean;
   selectedDepartment: Department | null;
-  request: CancelTokenSource | null;
 }
-import { museumApi } from "@/services/museum";
-import ArtworkCollection from "@/components/collection/ArtworkCollection.vue";
 
 export default defineComponent({
-  name: "ExplorerView",
+  name: 'ExplorerView',
   components: { ArtworkCollection },
-  data: (): ExplorerState => ({
-    departments: [],
-    loading: false,
-    error: "",
-    isDialogOpen: false,
-    selectedDepartment: null,
-    request: null,
-  }),
+  data: (): ExplorerState => {
+    return {
+      departments: [],
+      isLoading: false,
+      errorMessage: '',
+      isDialogOpen: false,
+      selectedDepartment: null,
+    };
+  },
   computed: {
     collectionQuery(): CollectionQuery | null {
-      if (!this.selectedDepartment) return null;
+      if (!this.selectedDepartment) {
+        return null;
+      }
+
       return {
         keyword: this.selectedDepartment.displayName,
         departmentId: this.selectedDepartment.departmentId,
@@ -58,20 +93,18 @@ export default defineComponent({
   created() {
     this.loadDepartments();
   },
-  beforeDestroy() {
-    if (this.request) this.request.cancel();
-  },
   methods: {
     async loadDepartments() {
-      this.request = axios.CancelToken.source();
-      this.loading = true;
-      this.error = "";
+      this.isLoading = true;
+      this.errorMessage = '';
+
       try {
-        this.departments = await museumApi.getDepartments({ cancelToken: this.request.token });
+        this.departments = await museumApi.getDepartments();
       } catch (error) {
-        if (!axios.isCancel(error)) this.error = "Unable to load departments. Please try again.";
+        this.errorMessage = 'We couldn’t load the departments. Please try again.';
+        console.error(error);
       } finally {
-        this.loading = false;
+        this.isLoading = false;
       }
     },
     openDepartment(department: Department) {

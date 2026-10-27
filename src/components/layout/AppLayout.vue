@@ -8,12 +8,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import AppHeader from "./AppHeader.vue";
-import AppFooter from "./AppFooter.vue";
+import { defineComponent } from 'vue';
+import AppHeader from './AppHeader.vue';
+import AppFooter from './AppFooter.vue';
 
 export default defineComponent({
-  name: "AppLayout",
+  name: 'AppLayout',
   components: {
     AppHeader,
     AppFooter,

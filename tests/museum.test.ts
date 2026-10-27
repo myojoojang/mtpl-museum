@@ -1,91 +1,154 @@
-import test from 'node:test';
-import axios from 'axios';
+import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMuseumApi } from '../src/services/museum';
+import axios from 'axios';
+import type { AxiosRequestConfig } from 'axios';
+import { museumApi } from '../src/services/museum';
 import { sampleIds } from '../src/utils/sampling';
 import { flattenArtwork } from '../src/utils/artwork';
-import type { AxiosRequestConfig } from 'axios';
-import { httpClient } from './helpers';
 
-const tick = () => new Promise<void>(resolve => setImmediate(resolve));
+const originalAdapter = axios.defaults.adapter;
 
-test('department samples contain distinct IDs and handle small or empty collections', () => {
-  const ids = [1, 1, 2, 3];
-  assert.deepEqual(sampleIds(ids, 50, () => 0), [1, 2, 3]);
+afterEach(() => {
+  axios.defaults.adapter = originalAdapter;
+});
+
+function mockHttp(handler: (config: AxiosRequestConfig) => Promise<unknown>): void {
+  axios.defaults.adapter = async (config) => {
+    return {
+      data: await handler(config),
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config,
+    };
+  };
+}
+
+test('search uses the first v1.1 page and preserves the original filters', async () => {
+  const calls: AxiosRequestConfig[] = [];
+
+  mockHttp(async (config) => {
+    calls.push(config);
+
+    return {
+      total: 0,
+      objectIDs: null,
+    };
+  });
+  assert.deepEqual(await museumApi.search({ keyword: 'art & design?' }), {
+    ids: [],
+    total: 0,
+  });
+  assert.equal(calls[0].url, 'https://collectionapi.metmuseum.org/public/collection/v1.1/search');
+  assert.deepEqual(calls[0].params, {
+    q: 'art & design?',
+    hasImages: true,
+    isHighlight: true,
+  });
+  await museumApi.search({
+    keyword: 'Arms and Armor',
+    departmentId: 4,
+  });
+  assert.deepEqual(calls[1].params, {
+    q: 'Arms and Armor',
+    hasImages: true,
+    departmentId: 4,
+  });
+});
+
+test('departments and artwork details retain their supported v1 routes', async () => {
+  const urls: string[] = [];
+
+  mockHttp(async (config) => {
+    urls.push(config.url || '');
+    if (config.url?.endsWith('/departments')) {
+      return {
+        departments: [{
+          departmentId: 4,
+          displayName: 'Arms and Armor',
+        }],
+      };
+    }
+
+    return { objectID: 1 };
+  });
+  const departments = await museumApi.getDepartments();
+  const artworks = await museumApi.getArtworks([1]);
+
+  assert.equal(departments[0].departmentId, 4);
+  assert.equal(artworks[0].objectID, 1);
+  assert.deepEqual(urls, [
+    'https://collectionapi.metmuseum.org/public/collection/v1/departments',
+    'https://collectionapi.metmuseum.org/public/collection/v1/objects/1',
+  ]);
+});
+
+test('selected artworks start together without a request limit', async () => {
+  const started: number[] = [];
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  mockHttp(async (config) => {
+    const objectID = Number(config.url?.split('/').pop());
+
+    started.push(objectID);
+    await pending;
+
+    return { objectID };
+  });
+  const ids = [1, 2, 3, 4, 5, 6];
+  const loading = museumApi.getArtworks(ids);
+
+  await new Promise<void>((resolve) => {
+    setImmediate(resolve);
+  });
+  assert.deepEqual(started, ids);
+  release();
+  const artworks = await loading;
+
+  assert.deepEqual(artworks.map((artwork) => {
+    return artwork.objectID;
+  }), ids);
+});
+
+test('artwork failures reject without partial-failure tracking', async () => {
+  mockHttp(async () => {
+    throw new Error('Unavailable');
+  });
+  await assert.rejects(museumApi.getArtworks([1]), /Unavailable/);
+  assert.deepEqual(await museumApi.getArtworks([]), []);
+});
+
+test('department selection keeps the original random selection behavior', () => {
+  const ids = [1, 2, 3];
+
+  assert.deepEqual(sampleIds(ids, 50, () => {
+    return 0;
+  }), [1, 1, 1]);
   assert.deepEqual(sampleIds([], 10), []);
-  assert.deepEqual(sampleIds(ids, 2, () => 0.99), [3, 1]);
-  assert.deepEqual(ids, [1, 1, 2, 3]);
+  assert.deepEqual(sampleIds(ids, 2, () => {
+    return 0.99;
+  }), [3, 3]);
+  assert.deepEqual(ids, [1, 2, 3]);
 });
 
-test('search passes special characters as query parameters and normalizes no results', async () => {
-  const calls: Array<[string, AxiosRequestConfig?]> = [];
-  const api = createMuseumApi(httpClient(async (...args) => {
-    calls.push(args);
-    return { total: 0, objectIDs: null };
-  }));
-  assert.deepEqual(await api.search({ keyword: 'art & design?', offset: 10, limit: 10 }), { ids: [], total: 0 });
-  assert.equal(calls[0][0], '/v1.1/search');
-  assert.deepEqual(calls[0][1]?.params, {
-    hasImages: true, q: 'art & design?', isHighlight: true, offset: 10, limit: 10,
-  });
-  await api.search({ keyword: 'Arts & Crafts', departmentId: 4, offset: 0, limit: 50 });
-  assert.deepEqual(calls[1][1]?.params, { hasImages: true, departmentId: 4, offset: 0, limit: 50 });
-});
-
-test('artwork loading caps concurrency, preserves order, and reports partial failures', async () => {
-  let active = 0;
-  let maximum = 0;
-  const api = createMuseumApi(httpClient(async path => {
-    const id = Number(path.split('/').pop());
-    active += 1;
-    maximum = Math.max(active, maximum);
-    await tick();
-    active -= 1;
-    if (id === 3) throw new Error('Unavailable');
-    return { objectID: id };
-  }));
-  const result = await api.getArtworks(Array.from({ length: 15 }, (_, index) => index));
-  assert.equal(maximum, 5);
-  assert.equal(result.failed, 1);
-  assert.deepEqual(result.artworks.map(item => item.objectID),
-    Array.from({ length: 15 }, (_, index) => index).filter(id => id !== 3));
-});
-
-test('empty collections make no object requests', async () => {
-  const api = createMuseumApi(httpClient(async () => { throw new Error('Unexpected request'); }));
-  assert.deepEqual(await api.getArtworks([]), { artworks: [], failed: 0 });
-});
-
-test('cancellation stops workers instead of reporting ordinary failures', async () => {
-  const cancellation = new axios.Cancel('Cancelled');
-  let calls = 0;
-  const api = createMuseumApi(httpClient(async () => {
-    calls += 1;
-    throw cancellation;
-  }));
-  await assert.rejects(api.getArtworks(Array.from({ length: 20 }, (_, i) => i)), cancellation);
-  assert.equal(calls, 5);
-});
-
-test('metadata preserves nested fields, false and zero without rendering objects', () => {
+test('metadata retains nested fields, false, and zero', () => {
   assert.deepEqual(flattenArtwork({
-    title: 'Artwork', empty: '', missing: null, isPublicDomain: false, count: 0,
-    tags: [{ term: 'Art' }, { term: 'Painting' }], measurements: { width: 12 },
+    title: 'Artwork',
+    empty: '',
+    missing: null,
+    isPublicDomain: false,
+    count: 0,
+    tags: [{ term: 'Art' }, { term: 'Painting' }],
+    measurements: { width: 12 },
   }), {
-    title: 'Artwork', isPublicDomain: false, count: 0,
-    'tags.0.term': 'Art', 'tags.1.term': 'Painting', 'measurements.width': 12,
+    title: 'Artwork',
+    isPublicDomain: false,
+    count: 0,
+    'tags.0.term': 'Art',
+    'tags.1.term': 'Painting',
+    'measurements.width': 12,
   });
-});
-
-test('departments and object details retain their supported v1 routes', async () => {
-  const paths: string[] = [];
-  const api = createMuseumApi(httpClient(async path => {
-    paths.push(path);
-    return path.endsWith('/departments')
-      ? { departments: [{ departmentId: 4, displayName: 'Arms and Armor' }] }
-      : { objectID: 1 };
-  }));
-  await api.getDepartments();
-  await api.getArtworks([1]);
-  assert.deepEqual(paths, ['/v1/departments', '/v1/objects/1']);
 });
