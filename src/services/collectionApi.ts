@@ -39,18 +39,6 @@ export const collectionApi = {
       return data;
     });
 
-    const artworks = await Promise.all(artworkRequests);
-
-    return artworks.filter((artwork) => {
-      const imageUrls = [
-        artwork.primaryImageSmall,
-        artwork.primaryImage,
-        ...(artwork.additionalImages || []),
-      ];
-
-      return imageUrls.some((imageUrl) => {
-        return Boolean(imageUrl);
-      });
-    });
+    return Promise.all(artworkRequests);
   },
 };
