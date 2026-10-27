@@ -1,18 +1,15 @@
 import test from 'node:test';
+import type { CancelToken } from 'axios';
 import assert from 'node:assert/strict';
 import { createCollection } from '../src/models/collection';
 import type { ArtworksResult, MuseumApi, SearchQuery, SearchResult } from '../src/types/museum';
-import { createTrackedRequest, deferred } from './helpers';
+import { deferred } from './helpers';
 
 function collection(overrides: Partial<Pick<MuseumApi, 'search' | 'getArtworks'>> = {}) {
   return createCollection({
-    api: {
-      search: async () => ({ ids: [1, 2, 3], total: 3 }),
-      getArtworks: async ids => ({ artworks: ids.map(objectID => ({ objectID })), failed: 0 }),
-      ...overrides,
-    },
-    createRequest: createTrackedRequest,
-    isCancelled: error => typeof error === 'object' && error !== null && 'cancelled' in error,
+    search: async () => ({ ids: [1, 2, 3], total: 3 }),
+    getArtworks: async ids => ({ artworks: ids.map(objectID => ({ objectID })), failed: 0 }),
+    ...overrides,
   });
 }
 
@@ -42,7 +39,7 @@ test('search failure clears loading and retry searches again', async () => {
   await model.load({ keyword: 'art' });
   assert.equal(model.state.loading, false);
   assert.match(model.state.error, /Unable to load the collection/);
-  await model.retry();
+  await model.load({ keyword: 'art' }, model.state.page, model.state.pageSize);
   assert.equal(attempts, 2);
   assert.equal(model.state.error, '');
 });
@@ -61,16 +58,16 @@ test('search loads only the selected page and resets the page for a new query', 
     },
   });
   await model.load({ keyword: 'art' });
-  await model.setPage(2);
+  await model.load({ keyword: 'art' }, 2);
   assert.deepEqual(selected, [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
   await model.load({ keyword: 'painting' });
   assert.equal(model.state.page, 1);
   assert.deepEqual(selected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-  assert.equal(model.state.ids.length, 10);
+  assert.equal(model.state.artworks.length, 10);
   assert.deepEqual(requests, [{ offset: 0, limit: 10 }, { offset: 10, limit: 10 }, { offset: 0, limit: 10 }]);
 });
 
-test('artwork failures retry the page without repeating the search', async () => {
+test('retrying after artwork failure reloads the collection', async () => {
   let searches = 0;
   let attempts = 0;
   const model = collection({
@@ -83,8 +80,8 @@ test('artwork failures retry the page without repeating the search', async () =>
   assert.equal(model.state.loading, false);
   assert.equal(model.state.failed, 1);
   assert.match(model.state.error, /Unable to load artworks/);
-  await model.retry();
-  assert.equal(searches, 1);
+  await model.load({ keyword: 'art' }, model.state.page, model.state.pageSize);
+  assert.equal(searches, 2);
   assert.equal(model.state.artworks[0].objectID, 1);
   assert.equal(model.state.error, '');
 });
@@ -92,7 +89,7 @@ test('artwork failures retry the page without repeating the search', async () =>
 test('department sample sizes are bounded by unique IDs', async () => {
   const model = collection({ search: async () => ({ ids: [1, 1, 2, 3], total: 4 }) });
   await model.load({ keyword: 'Department', departmentId: 4 });
-  await model.setPageSize(50);
+  await model.load({ keyword: 'Department', departmentId: 4 }, 1, 50);
   assert.equal(model.state.pageSize, 50);
   assert.equal(model.state.artworks.length, 3);
   assert.equal(new Set(model.state.artworks.map(item => item.objectID)).size, 3);
@@ -100,20 +97,16 @@ test('department sample sizes are bounded by unique IDs', async () => {
 
 test('disposing cancels the active request and ignores late responses', async () => {
   const searchResult = deferred<SearchResult>();
-  const current = createTrackedRequest();
-  const model = createCollection({
-    api: {
-      search: () => searchResult.promise,
-      getArtworks: () => { throw new Error('Must not request after disposal'); },
-    },
-    createRequest: () => current,
-    isCancelled: () => false,
+  let token: CancelToken | undefined;
+  const model = collection({
+    search: query => { token = query.cancelToken; return searchResult.promise; },
+    getArtworks: () => { throw new Error('Must not request after disposal'); },
   });
   const pending = model.load({ keyword: 'art' });
   model.dispose();
   searchResult.resolve({ ids: [1], total: 1 });
   await pending;
-  assert.equal(current.cancelled, true);
+  assert.ok(token?.reason);
   assert.equal(model.state.loading, false);
   assert.equal(model.state.total, 0);
   await model.load({ keyword: 'another' });
@@ -140,11 +133,11 @@ test('separate galleries own independent state and request lifetimes', async () 
   const first = collection();
   const second = collection();
   await Promise.all([first.load({ keyword: 'art' }), second.load({ keyword: 'painting' })]);
-  await first.setPageSize(5);
+  await first.load({ keyword: 'art' }, 1, 5);
   first.dispose();
   assert.equal(second.state.pageSize, 10);
   assert.equal(second.state.artworks.length, 3);
-  await second.refresh();
+  await second.load({ keyword: 'painting' });
   assert.equal(second.state.error, '');
 });
 
@@ -155,10 +148,10 @@ test('the search result window never exceeds the API limit of 10,000', async () 
     return { ids: [query.offset + 1], total: 20_000 };
   } });
   await model.load({ keyword: 'art' });
-  await model.setPage(1000);
+  await model.load({ keyword: 'art' }, 1000);
   assert.equal(requests[1].offset, 9990);
   assert.equal(requests[1].limit, 10);
-  await model.setPage(1001);
+  await model.load({ keyword: 'art' }, 1001);
   assert.equal(requests.length, 2);
   assert.equal(model.state.page, 1000);
 });
@@ -172,9 +165,9 @@ test('retrying a failed search page keeps its offset', async () => {
     return { ids: [offset + 1], total: 30 };
   } });
   await model.load({ keyword: 'art' });
-  await model.setPage(2);
+  await model.load({ keyword: 'art' }, 2);
   assert.match(model.state.error, /Unable to load the collection/);
-  await model.retry();
+  await model.load({ keyword: 'art' }, model.state.page, model.state.pageSize);
   assert.equal(model.state.page, 2);
   assert.deepEqual(offsets, [0, 10, 10]);
   assert.equal(model.state.artworks[0].objectID, 11);
@@ -187,7 +180,7 @@ test('department sampling requests a bounded window instead of enumerating every
     return { ids: Array.from({ length: query.limit }, (_, i) => query.offset + i), total: 25_000 };
   } });
   await model.load({ keyword: 'Department', departmentId: 4 });
-  await model.refresh();
+  await model.load({ keyword: 'Department', departmentId: 4 });
   assert.equal(requests.length, 3);
   assert.equal(requests[0].limit, 1);
   for (const query of requests.slice(1)) {

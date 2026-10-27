@@ -1,6 +1,6 @@
 <template>
   <ArtworkGallery :artworks="state.artworks" :loading="state.loading"
-    :error="state.error" :failed="state.failed" @retry="collection.retry()">
+    :error="state.error" :failed="state.failed" @retry="loadCollection()">
     <template v-if="!isSearch" #header>
       <div class="d-flex justify-space-between align-center pa-4">
         <div class="larger serif white--text uppercase">{{ query.keyword }}</div>
@@ -19,9 +19,9 @@
       <div v-if="!isSearch" class="d-flex justify-end align-center mb-6">
         <v-select :value="state.pageSize" :items="pageSizes" label="Artworks"
           class="artwork-count" rounded flat background-color="white"
-          :disabled="state.loading" @change="collection.setPageSize($event)" />
+          :disabled="state.loading" @change="loadCollection(1, $event)" />
         <v-btn x-small fab class="mx-2" aria-label="Refresh artworks"
-          :disabled="state.loading || !state.total" @click="collection.refresh()">
+          :disabled="state.loading || !state.total" @click="loadCollection()">
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
       </div>
@@ -29,7 +29,7 @@
     <template #pagination>
       <v-pagination v-if="isSearch && pageCount > 1" :value="state.page"
         :length="pageCount" :total-visible="7" :disabled="state.loading"
-        @input="collection.setPage($event)" />
+        @input="loadCollection($event)" />
     </template>
   </ArtworkGallery>
 </template>
@@ -41,7 +41,7 @@ import type { CollectionQuery } from "@/types/museum";
 import ArtworkGallery from "./ArtworkGallery.vue";
 import { MAX_SEARCH_RESULTS } from "@/config/collection";
 import { createCollection } from "@/models/collection";
-import { museumApi, createRequest, isCancelled } from "@/services/museum";
+import { museumApi } from "@/services/museum";
 
 export default defineComponent({
   name: "ArtworkCollection",
@@ -50,7 +50,7 @@ export default defineComponent({
     query: { type: Object as PropType<CollectionQuery>, required: true },
   },
   data() {
-    const collection = createCollection({ api: museumApi, createRequest, isCancelled });
+    const collection = createCollection(museumApi);
     return { collection, state: collection.state, pageSizes: [5, 10, 20, 30, 50], resultLimit: MAX_SEARCH_RESULTS };
   },
   computed: {
@@ -61,6 +61,11 @@ export default defineComponent({
     query: {
       immediate: true,
       handler(query: CollectionQuery) { this.collection.load(query); },
+    },
+  },
+  methods: {
+    loadCollection(page?: number, pageSize?: number): Promise<void> {
+      return this.collection.load(this.query, page ?? this.state.page, pageSize ?? this.state.pageSize);
     },
   },
   beforeDestroy() { this.collection.dispose(); },

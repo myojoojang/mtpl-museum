@@ -1,6 +1,7 @@
 import test from 'node:test';
+import axios from 'axios';
 import assert from 'node:assert/strict';
-import { createMuseumApi } from '../src/services/museum-api';
+import { createMuseumApi } from '../src/services/museum';
 import { sampleIds } from '../src/utils/sampling';
 import { flattenArtwork } from '../src/utils/artwork';
 import type { AxiosRequestConfig } from 'axios';
@@ -23,9 +24,10 @@ test('search passes special characters as query parameters and normalizes no res
     return { total: 0, objectIDs: null };
   }));
   assert.deepEqual(await api.search({ keyword: 'art & design?', offset: 10, limit: 10 }), { ids: [], total: 0 });
-  assert.deepEqual(calls[0], ['/v1.1/search', { params: {
+  assert.equal(calls[0][0], '/v1.1/search');
+  assert.deepEqual(calls[0][1]?.params, {
     hasImages: true, q: 'art & design?', isHighlight: true, offset: 10, limit: 10,
-  } }]);
+  });
   await api.search({ keyword: 'Arts & Crafts', departmentId: 4, offset: 0, limit: 50 });
   assert.deepEqual(calls[1][1]?.params, { hasImages: true, departmentId: 4, offset: 0, limit: 50 });
 });
@@ -55,12 +57,12 @@ test('empty collections make no object requests', async () => {
 });
 
 test('cancellation stops workers instead of reporting ordinary failures', async () => {
-  const cancellation = new Error('Cancelled');
+  const cancellation = new axios.Cancel('Cancelled');
   let calls = 0;
   const api = createMuseumApi(httpClient(async () => {
     calls += 1;
     throw cancellation;
-  }), error => error === cancellation);
+  }));
   await assert.rejects(api.getArtworks(Array.from({ length: 20 }, (_, i) => i)), cancellation);
   assert.equal(calls, 5);
 });

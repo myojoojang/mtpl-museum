@@ -1,4 +1,4 @@
-import type { AxiosRequestConfig, CancelTokenSource } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 
 export type MetadataValue = string | number | boolean | null
   | MetadataValue[] | { [key: string]: MetadataValue | undefined };
@@ -34,8 +34,6 @@ export interface SearchQuery extends CollectionQuery {
 }
 
 export type RequestOptions = Pick<AxiosRequestConfig, 'cancelToken'>;
-export type RequestHandle = Pick<CancelTokenSource, 'token' | 'cancel'>;
-export type CancellationCheck = (error: unknown) => boolean;
 
 export interface SearchResult {
   ids: number[];
@@ -51,8 +49,4 @@ export interface MuseumApi {
   getDepartments(options?: RequestOptions): Promise<Department[]>;
   search(query: SearchQuery & RequestOptions): Promise<SearchResult>;
   getArtworks(ids: readonly number[], options?: RequestOptions): Promise<ArtworksResult>;
-}
-
-export interface MuseumHttpClient {
-  get<T>(path: string, options?: AxiosRequestConfig): Promise<{ data: T }>;
 }

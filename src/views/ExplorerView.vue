@@ -20,7 +20,9 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import type { CollectionQuery, Department, RequestHandle } from "@/types/museum";
+import axios from "axios";
+import type { CancelTokenSource } from "axios";
+import type { CollectionQuery, Department } from "@/types/museum";
 
 interface ExplorerState {
   departments: Department[];
@@ -28,9 +30,9 @@ interface ExplorerState {
   error: string;
   isDialogOpen: boolean;
   selectedDepartment: Department | null;
-  request: RequestHandle | null;
+  request: CancelTokenSource | null;
 }
-import { museumApi, createRequest, isCancelled } from "@/services/museum";
+import { museumApi } from "@/services/museum";
 import ArtworkCollection from "@/components/collection/ArtworkCollection.vue";
 
 export default defineComponent({
@@ -61,13 +63,13 @@ export default defineComponent({
   },
   methods: {
     async loadDepartments() {
-      this.request = createRequest();
+      this.request = axios.CancelToken.source();
       this.loading = true;
       this.error = "";
       try {
         this.departments = await museumApi.getDepartments({ cancelToken: this.request.token });
       } catch (error) {
-        if (!isCancelled(error)) this.error = "Unable to load departments. Please try again.";
+        if (!axios.isCancel(error)) this.error = "Unable to load departments. Please try again.";
       } finally {
         this.loading = false;
       }
