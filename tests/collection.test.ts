@@ -2,9 +2,9 @@ import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import axios from 'axios';
 import type { AxiosRequestConfig } from 'axios';
-import { museumApi } from '../src/services/museum';
-import { sampleIds } from '../src/utils/sampling';
-import { flattenArtwork } from '../src/utils/artwork';
+import { collectionApi } from '../src/services/collectionApi';
+import { sampleItems } from '../src/utils/sampleItems';
+import { flattenObject } from '../src/utils/flattenObject';
 
 const originalAdapter = axios.defaults.adapter;
 
@@ -35,7 +35,7 @@ test('search uses the first v1.1 page and preserves the original filters', async
       objectIDs: null,
     };
   });
-  assert.deepEqual(await museumApi.search({ keyword: 'art & design?' }), {
+  assert.deepEqual(await collectionApi.search({ keyword: 'art & design?' }), {
     ids: [],
     total: 0,
   });
@@ -45,7 +45,7 @@ test('search uses the first v1.1 page and preserves the original filters', async
     hasImages: true,
     isHighlight: true,
   });
-  await museumApi.search({
+  await collectionApi.search({
     keyword: 'Arms and Armor',
     departmentId: 4,
   });
@@ -72,8 +72,8 @@ test('departments and artwork details retain their supported v1 routes', async (
 
     return { objectID: 1 };
   });
-  const departments = await museumApi.getDepartments();
-  const artworks = await museumApi.getArtworks([1]);
+  const departments = await collectionApi.getDepartments();
+  const artworks = await collectionApi.getArtworks([1]);
 
   assert.equal(departments[0].departmentId, 4);
   assert.equal(artworks[0].objectID, 1);
@@ -99,7 +99,7 @@ test('selected artworks start together without a request limit', async () => {
     return { objectID };
   });
   const ids = [1, 2, 3, 4, 5, 6];
-  const loading = museumApi.getArtworks(ids);
+  const loading = collectionApi.getArtworks(ids);
 
   await new Promise<void>((resolve) => {
     setImmediate(resolve);
@@ -117,25 +117,25 @@ test('artwork failures reject without partial-failure tracking', async () => {
   mockHttp(async () => {
     throw new Error('Unavailable');
   });
-  await assert.rejects(museumApi.getArtworks([1]), /Unavailable/);
-  assert.deepEqual(await museumApi.getArtworks([]), []);
+  await assert.rejects(collectionApi.getArtworks([1]), /Unavailable/);
+  assert.deepEqual(await collectionApi.getArtworks([]), []);
 });
 
 test('department selection keeps the original random selection behavior', () => {
   const ids = [1, 2, 3];
 
-  assert.deepEqual(sampleIds(ids, 50, () => {
+  assert.deepEqual(sampleItems(ids, 50, () => {
     return 0;
   }), [1, 1, 1]);
-  assert.deepEqual(sampleIds([], 10), []);
-  assert.deepEqual(sampleIds(ids, 2, () => {
+  assert.deepEqual(sampleItems([], 10), []);
+  assert.deepEqual(sampleItems(ids, 2, () => {
     return 0.99;
   }), [3, 3]);
   assert.deepEqual(ids, [1, 2, 3]);
 });
 
 test('metadata retains nested fields, false, and zero', () => {
-  assert.deepEqual(flattenArtwork({
+  assert.deepEqual(flattenObject({
     title: 'Artwork',
     empty: '',
     missing: null,

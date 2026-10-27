@@ -1,9 +1,9 @@
 import axios from 'axios';
-import type { Artwork, CollectionQuery, Department, SearchResult } from '../types/museum';
+import type { Artwork, CollectionQuery, Department, SearchResult } from '../types/collection';
 
 const API_URL = 'https://collectionapi.metmuseum.org/public/collection';
 
-export const museumApi = {
+export const collectionApi = {
   async getDepartments(): Promise<Department[]> {
     const { data } = await axios.get<{ departments: Department[] }>(`${API_URL}/v1/departments`);
 

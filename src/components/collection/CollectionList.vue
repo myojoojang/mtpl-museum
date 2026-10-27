@@ -41,7 +41,7 @@
       >
         No artworks found.
       </div>
-      <ArtworkCard
+      <CollectionItem
         v-for="(artwork, index) in artworks"
         :key="`${artwork.objectID}-${index}`"
         :artwork="artwork"
@@ -66,12 +66,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import type { PropType } from 'vue';
-import type { Artwork } from '@/types/museum';
-import ArtworkCard from './ArtworkCard.vue';
+import type { Artwork } from '@/types/collection';
+import CollectionItem from './CollectionItem.vue';
 
 export default defineComponent({
-  name: 'ArtworkGallery',
-  components: { ArtworkCard },
+  name: 'CollectionList',
+  components: { CollectionItem },
   props: {
     artworks: {
       type: Array as PropType<Artwork[]>,

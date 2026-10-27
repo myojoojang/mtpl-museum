@@ -10,7 +10,8 @@
       <div class="d-flex align-center">
         <v-text-field
           v-model="searchKeyword"
-          @keydown="passKeyword = false"
+          :disabled="isLoading"
+          @keydown="hasSearched = false"
           @keyup.enter="search"
           label="Search the collection"
           background-color="white"
@@ -20,6 +21,7 @@
           hide-details
         />
         <v-btn
+          :disabled="isLoading"
           @click="search"
           color="white"
           fab
@@ -33,10 +35,22 @@
         </v-btn>
       </div>
     </v-card>
-    <ArtworkCollection
-      v-if="passKeyword"
-      :query="collectionQuery"
-    />
+    <CollectionList
+      v-if="hasSearched"
+      :artworks="artworks"
+      :loading="isLoading"
+      :error-message="errorMessage"
+      @retry="search"
+    >
+      <template #controls>
+        <p
+          v-if="!isLoading && !errorMessage"
+          class="white--text mx-8 mb-8"
+        >
+          Showing {{ artworks.length }} of {{ totalResults }} results for '{{ searchKeyword }}'.
+        </p>
+      </template>
+    </CollectionList>
     <v-card
       v-else
       height="60vh"
@@ -49,26 +63,50 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import type { CollectionQuery } from '@/types/museum';
-import ArtworkCollection from '@/components/collection/ArtworkCollection.vue';
+import type { Artwork } from '@/types/collection';
+import CollectionList from '@/components/collection/CollectionList.vue';
+import { collectionApi } from '@/services/collectionApi';
+
+interface SearchState {
+  searchKeyword: string;
+  hasSearched: boolean;
+  artworks: Artwork[];
+  totalResults: number;
+  isLoading: boolean;
+  errorMessage: string;
+}
 
 export default defineComponent({
   name: 'SearchView',
-  components: { ArtworkCollection },
-  data: () => {
+  components: { CollectionList },
+  data(): SearchState {
     return {
       searchKeyword: '',
-      passKeyword: false,
+      hasSearched: false,
+      artworks: [],
+      totalResults: 0,
+      isLoading: false,
+      errorMessage: '',
     };
   },
-  computed: {
-    collectionQuery(): CollectionQuery {
-      return { keyword: this.searchKeyword };
-    },
-  },
   methods: {
-    search() {
-      this.passKeyword = true;
+    async search(): Promise<void> {
+      this.hasSearched = true;
+      this.isLoading = true;
+      this.errorMessage = '';
+      this.artworks = [];
+
+      try {
+        const searchResult = await collectionApi.search({ keyword: this.searchKeyword });
+
+        this.totalResults = searchResult.total;
+        this.artworks = await collectionApi.getArtworks(searchResult.ids);
+      } catch (error) {
+        this.errorMessage = 'We couldn’t load the search results. Please try again.';
+        console.error(error);
+      } finally {
+        this.isLoading = false;
+      }
     },
   },
 });

@@ -64,7 +64,7 @@
       fullscreen
       transition="dialog-bottom-transition"
     >
-      <ArtworkDetailsDialog
+      <CollectionItemDetails
         v-if="isDialogOpen"
         :artwork="artwork"
         @close="isDialogOpen = false"
@@ -76,12 +76,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import type { PropType } from 'vue';
-import type { Artwork } from '@/types/museum';
-import ArtworkDetailsDialog from './ArtworkDetailsDialog.vue';
+import type { Artwork } from '@/types/collection';
+import CollectionItemDetails from './CollectionItemDetails.vue';
 
 export default defineComponent({
-  name: 'ArtworkCard',
-  components: { ArtworkDetailsDialog },
+  name: 'CollectionItem',
+  components: { CollectionItemDetails },
   props: {
     artwork: {
       type: Object as PropType<Artwork>,
@@ -92,7 +92,7 @@ export default defineComponent({
       default: false,
     },
   },
-  data: () => {
+  data() {
     return { isDialogOpen: false };
   },
   computed: {

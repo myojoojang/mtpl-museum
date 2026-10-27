@@ -11,7 +11,8 @@
             height="85vh"
             class="img"
             alt="The Metropolitan Museum of Art"
-          /></a>
+          />
+        </a>
       </v-col>
       <v-col
         cols="12"
@@ -56,6 +57,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+
 export default defineComponent({
   name: 'HomeView',
 });

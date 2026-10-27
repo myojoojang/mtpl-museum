@@ -1,15 +1,15 @@
 <template>
   <v-app>
-    <AppLayout />
+    <SiteLayout />
   </v-app>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import AppLayout from './components/layout/AppLayout.vue';
+import SiteLayout from './components/layout/SiteLayout.vue';
 
 export default defineComponent({
   name: 'App',
-  components: { AppLayout },
+  components: { SiteLayout },
 });
 </script>

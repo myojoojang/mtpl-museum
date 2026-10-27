@@ -1,22 +1,22 @@
 <template>
   <v-main>
-    <AppHeader />
+    <SiteHeader />
     <v-divider class="mb-2" />
     <router-view />
-    <AppFooter />
+    <SiteFooter />
   </v-main>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import AppHeader from './AppHeader.vue';
-import AppFooter from './AppFooter.vue';
+import SiteHeader from './SiteHeader.vue';
+import SiteFooter from './SiteFooter.vue';
 
 export default defineComponent({
-  name: 'AppLayout',
+  name: 'SiteLayout',
   components: {
-    AppHeader,
-    AppFooter,
+    SiteHeader,
+    SiteFooter,
   },
 });
 </script>

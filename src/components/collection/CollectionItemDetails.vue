@@ -51,12 +51,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import type { PropType } from 'vue';
-import type { Artwork } from '@/types/museum';
-import type { ArtworkDetails } from '@/utils/artwork';
-import { flattenArtwork } from '@/utils/artwork';
+import type { Artwork } from '@/types/collection';
+import type { FlattenedValues } from '@/utils/flattenObject';
+import { flattenObject } from '@/utils/flattenObject';
 
 export default defineComponent({
-  name: 'ArtworkDetailsDialog',
+  name: 'CollectionItemDetails',
   props: {
     artwork: {
       type: Object as PropType<Artwork>,
@@ -64,13 +64,16 @@ export default defineComponent({
     },
   },
   computed: {
-    details(): ArtworkDetails {
-      return flattenArtwork(this.artwork);
+    details(): FlattenedValues {
+      return flattenObject(this.artwork);
     },
   },
 });
 </script>
 
 <style scoped>
-.artwork-details { overflow-x: hidden; overflow-wrap: anywhere; }
+.artwork-details {
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+}
 </style>

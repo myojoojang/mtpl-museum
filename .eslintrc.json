@@ -90,6 +90,10 @@
       {
         "selector": "AssignmentExpression[operator='-=']",
         "message": "Derive values instead of maintaining manual counters."
+      },
+      {
+        "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='forEach']",
+        "message": "Use for...of instead of forEach."
       }
     ],
     "padding-line-between-statements": [
@@ -141,6 +145,11 @@
         "singleline": 1,
         "multiline": 1
       }
+    ],
+    "no-tabs": "error",
+    "eol-last": [
+      "error",
+      "always"
     ]
   },
   "parser": "vue-eslint-parser"
