@@ -61,5 +61,8 @@
     "transpileDependencies": [
       "vuetify"
     ]
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

@@ -5,6 +5,7 @@ Browse departments and search highlights from The Metropolitan Museum of Art's c
 ## Development
 
 ```sh
+nvm use
 npm ci
 npm run serve
 ```
@@ -16,7 +17,7 @@ npm test
 npm run build
 ```
 
-Use Node.js 18 or newer. Tests run through Node's test runner with `tsx` to load TypeScript. `npm run typecheck` checks application code, Vue scripts and templates, and test code under strict TypeScript settings. `npm run build` runs that check before compiling the production bundle.
+Use Node.js 24, as specified in `.nvmrc`, to match the Netlify build environment. The tooling requires at least Node.js 18. Tests run through Node's test runner with `tsx` to load TypeScript. `npm run typecheck` checks application code, Vue scripts and templates, and test code under strict TypeScript settings. `npm run build` runs that check before compiling the production bundle.
 
 This project retains Vue CLI 4 and Vuetify 2. Vue and its template compiler are aligned on 2.7.16 for typed component props. The build and development scripts enable the OpenSSL legacy provider required by Webpack 4 on modern Node versions. ESLint runs independently of Vue CLI with TypeScript and Vue parsers.
 
@@ -50,3 +51,9 @@ Search submits a trimmed keyword and shows ten highlights per page. Department b
 API requests use Axios query parameters so keywords and department names are encoded correctly. Data comes directly from the public [Met Collection API](https://metmuseum.github.io/); no API key is required. Fonts and icons also require an internet connection.
 
 The app retains the Vue 2/Vuetify 2 architecture. A Vue 3 or build-tool migration remains a separate change.
+
+## Netlify deployment
+
+`netlify.toml` sets the build command to `npm run build` and publishes `dist`. Netlify reads `.nvmrc` to select Node.js 24, overriding an older Node version pinned in the site's UI. Use the same version locally with `nvm use`.
+
+If `vue-tsc` fails with `SyntaxError: Unexpected token '.'` at an optional-chaining expression, check the Node version near the start of the deploy log. The build must use the repository's `.nvmrc` version. Header, page, and redirect checks depend on a successful deploy and may all fail when the build stops.
