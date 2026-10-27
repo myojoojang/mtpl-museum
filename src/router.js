@@ -19,9 +19,6 @@ export default new Router({
       path: '/search',
       component: () => import('@/components/SearchView.vue'),
     },
-    // {
-    //   path: '/',
-    //   component: () => import('@/components/Album.vue'),
-    // },
+    { path: '*', redirect: '/' },
   ],
 })

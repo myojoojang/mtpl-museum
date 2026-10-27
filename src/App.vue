@@ -11,29 +11,15 @@ export default {
   name: "App",
 
   components: { MainView },
-
-  data: () => ({
-    //
-  }),
-
-  methods: {},
 };
 </script>
 
-<style >
+<style>
 * {
   font-family: "Roboto", sans-serif;
 }
-* {
-  scroll-behavior: smooth;
-}
 html {
-  overflow: scroll;
-  overflow-x: hidden;
-}
-::-webkit-scrollbar {
-  width: 0px;
-  background: transparent; /* make scrollbar transparent */
+  overflow-y: auto;
 }
 
 a {

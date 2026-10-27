@@ -1,63 +1,73 @@
 <template>
   <div>
+    <v-progress-linear v-if="loading" indeterminate aria-label="Loading departments" />
+    <v-alert v-if="error" type="error" role="alert">
+      {{ error }}
+      <v-btn text @click="loadDepartments">Retry</v-btn>
+    </v-alert>
     <v-row>
-      <v-col cols="12" sm="6" v-for="dep of deps" :key="dep.displayId">
-        <div
-          @click="openDlg(dep)"
-          style="height: 100px"
-          class="d-flex justify-center align-center serif white hover pointer"
-        >
-          <div class="box serif bold larger">{{ dep.displayName }}</div>
-        </div>
+      <v-col v-for="department in departments" :key="department.departmentId" cols="12" sm="6">
+        <button type="button" class="department serif white hover" @click="openDepartment(department)">
+          <span class="box serif bold larger">{{ department.displayName }}</span>
+        </button>
       </v-col>
     </v-row>
-    <v-dialog
-      fullscreen
-      transition="dialog-bottom-transition"
-      v-model="isDlgOpen"
-    >
-      <Displays
-        v-if="isDlgOpen"
-        :dep-data="depData"
-        @dep-dlg-close="isDlgOpen = false"
-      />
+    <v-dialog v-model="isDialogOpen" fullscreen transition="dialog-bottom-transition">
+      <Displays v-if="isDialogOpen" :dep-data="selectedDepartment" @dep-dlg-close="isDialogOpen = false" />
     </v-dialog>
   </div>
 </template>
 
 <script>
-import axios from "axios";
-import { APIURL } from "@/GlobalVars";
-
+import { museumApi, createRequest, isCancelled } from "@/services/museum";
 import Displays from "./partial/Displays.vue";
+
 export default {
-  components: { Displays },
   name: "ExplorerView",
+  components: { Displays },
   data: () => ({
-    deps: [],
-    isDlgOpen: false,
-    depData: {},
+    departments: [],
+    loading: false,
+    error: "",
+    isDialogOpen: false,
+    selectedDepartment: null,
+    request: null,
   }),
   created() {
-    this.getData();
+    this.loadDepartments();
+  },
+  beforeDestroy() {
+    if (this.request) this.request.cancel();
   },
   methods: {
-    getData() {
-      axios
-        .get(`${APIURL}/departments`)
-        .then((res) => {
-          // console.log(res);
-          this.deps = res.data.departments;
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+    async loadDepartments() {
+      this.request = createRequest();
+      this.loading = true;
+      this.error = "";
+      try {
+        this.departments = await museumApi.getDepartments({ cancelToken: this.request.token });
+      } catch (error) {
+        if (!isCancelled(error)) this.error = "Unable to load departments. Please try again.";
+      } finally {
+        this.loading = false;
+      }
     },
-    openDlg(dep) {
-      console.log(dep);
-      this.depData = dep;
-      this.isDlgOpen = true;
+    openDepartment(department) {
+      this.selectedDepartment = department;
+      this.isDialogOpen = true;
     },
   },
 };
 </script>
+
+<style scoped>
+.department {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100px;
+  padding: 16px;
+  cursor: pointer;
+}
+</style>

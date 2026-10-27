@@ -15,13 +15,13 @@
     >
 
     <router-link
-      class="hover mx-2 d-none d-flex d-sm-flex d-md-none"
-      to="/explorer"
+      class="hover mx-2 d-flex d-md-none"
+      to="/explorer" aria-label="Collection explorer"
       ><v-icon color="black">mdi-compass</v-icon></router-link
     >
     <router-link
-      class="hover mx-2 d-none d-flex d-sm-flex d-md-none"
-      to="/search"
+      class="hover mx-2 d-flex d-md-none"
+      to="/search" aria-label="Search"
     >
       <v-icon color="black">mdi-magnify</v-icon></router-link
     >
@@ -33,6 +33,3 @@ export default {
   name: "AppBar",
 };
 </script>
-
-<style>
-</style>

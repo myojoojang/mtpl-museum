@@ -1,128 +1,47 @@
 <template>
   <v-row>
-    <template v-if="isEven">
-      <v-col cols="12" md="6" class="pa-1">
-        <template v-if="isImgReady">
-          <v-img
-            v-if="imgArr.length < 2"
-            :src="propData.primaryImageSmall"
-            class="img-hover"
-          />
-
-          <v-carousel
-            v-else
-            hide-delimiters
-            height="100%"
-            style="min-height: 400px"
-            class="img-hover"
-          >
-            <v-carousel-item
-              v-for="(item, i) in imgArr"
-              :key="i"
-              :src="item"
-            ></v-carousel-item>
-          </v-carousel>
-        </template>
-      </v-col>
-      <v-col cols="12" md="6" class="pa-0 d-flex align-center">
-        <div class="white--text capitalize slim ma-4">
-          <div class="larger bold serif my-4">{{ propData.title }}</div>
-          <span class="bold">{{ propData.culture || propData.country }}</span>
-          {{ propData.objectDate }}
-          <div>{{ propData.medium }}</div>
-          <div>{{ propData.dimensions }}</div>
-          <div>Accession Year {{ propData.accessionYear }}</div>
-          <!-- <div>{{ propData.tags }}</div> -->
-          <v-btn small @click="openDlg(propData)" class="my-2">more info</v-btn>
-        </div>
-      </v-col>
-    </template>
-    <template v-else>
-      <v-col
-        cols="12"
-        md="6"
-        class="pa-0 d-flex align-center justify-end text-right"
-      >
-        <div class="white--text capitalize slim ma-4">
-          <div class="larger bold serif my-4">{{ propData.title }}</div>
-          <span class="bold">{{ propData.culture || propData.country }}</span>
-          {{ propData.objectDate }}
-          <div>{{ propData.medium }}</div>
-          <div>{{ propData.dimensions }}</div>
-          <div>Accession Year {{ propData.accessionYear }}</div>
-          <!-- <div>{{ propData.tags }}</div> -->
-          <v-btn small @click="openDlg(propData)" class="my-2">more info</v-btn>
-        </div>
-      </v-col>
-      <v-col cols="12" md="6" class="pa-1">
-        <!-- {{ propData }} -->
-        <template v-if="isImgReady">
-          <v-img
-            v-if="imgArr.length < 2"
-            class="img-hover"
-            :src="propData.primaryImageSmall"
-          />
-
-          <v-carousel
-            v-else
-            hide-delimiters
-            height="100%"
-            style="min-height: 400px"
-            class="img-hover"
-          >
-            <v-carousel-item
-              v-for="(item, i) in imgArr"
-              :key="i"
-              :src="item"
-            ></v-carousel-item>
-          </v-carousel>
-        </template>
-      </v-col>
-    </template>
-    <v-dialog
-      fullscreen
-      transition="dialog-bottom-transition"
-      v-model="isDlgOpen"
-    >
-      <MoreInfoDlg :prop-data="info" @img-dlg-close="isDlgOpen = false" />
+    <v-col cols="12" md="6" class="pa-1" :order-md="isEven ? 1 : 2">
+      <v-img v-if="images.length === 1" :src="images[0]" :alt="propData.title" class="img-hover" />
+      <v-carousel v-else-if="images.length > 1" hide-delimiters height="400" class="img-hover">
+        <v-carousel-item v-for="image in images" :key="image" :src="image" :alt="propData.title" />
+      </v-carousel>
+      <div v-else class="white--text pa-4">No image available.</div>
+    </v-col>
+    <v-col cols="12" md="6" class="pa-0 d-flex align-center"
+      :order-md="isEven ? 2 : 1" :class="{ 'justify-end text-right': !isEven }">
+      <div class="white--text capitalize slim ma-4">
+        <div class="larger bold serif my-4">{{ propData.title }}</div>
+        <span class="bold">{{ propData.culture || propData.country }}</span>
+        {{ propData.objectDate }}
+        <div>{{ propData.medium }}</div>
+        <div>{{ propData.dimensions }}</div>
+        <div v-if="propData.accessionYear">Accession Year {{ propData.accessionYear }}</div>
+        <v-btn small class="my-2" @click="isDialogOpen = true">More info</v-btn>
+      </div>
+    </v-col>
+    <v-dialog v-model="isDialogOpen" fullscreen transition="dialog-bottom-transition">
+      <MoreInfoDlg v-if="isDialogOpen" :prop-data="propData" @img-dlg-close="isDialogOpen = false" />
     </v-dialog>
   </v-row>
 </template>
 
 <script>
 import MoreInfoDlg from "./MoreInfoDlg.vue";
+
 export default {
-  components: { MoreInfoDlg },
   name: "DisplayBox",
+  components: { MoreInfoDlg },
   props: {
-    propData: { type: Object, default: null },
+    propData: { type: Object, required: true },
     isEven: { type: Boolean, default: false },
   },
-  data: () => ({
-    imgArr: [],
-    isImgReady: false,
-    info: false,
-    isDlgOpen: false,
-  }),
-  beforeMount() {
-    this.sortImg();
-  },
-  methods: {
-    sortImg() {
-      let additional = this.propData.additionalImages;
-
-      if (additional.length > 1) {
-        this.imgArr.push(this.propData.primaryImageSmall);
-        for (let src of additional) {
-          this.imgArr.push(src);
-        }
-      }
-      this.isImgReady = true;
-    },
-
-    openDlg(obj) {
-      this.isDlgOpen = true;
-      this.info = obj;
+  data: () => ({ isDialogOpen: false }),
+  computed: {
+    images() {
+      return [...new Set([
+        this.propData.primaryImageSmall || this.propData.primaryImage,
+        ...(this.propData.additionalImages || []),
+      ].filter(Boolean))];
     },
   },
 };
